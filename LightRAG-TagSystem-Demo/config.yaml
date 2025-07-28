@@ -1,0 +1,46 @@
+# LightRAG标签系统配置 - DeepSeek版本
+app:
+  name: "LightRAG-TagSystem-Demo"
+  version: "1.0.0"
+  debug: true
+
+llm:
+  provider: "deepseek"
+  model: "deepseek-chat"
+  api_key: "sk-2e4c8701d3e048b794939a432ab956ab"
+  base_url: "https://api.deepseek.com"
+  max_tokens: 500
+  temperature: 0.7
+
+embedding:
+  provider: "deepseek"
+  model: "deepseek-chat"
+  base_url: "https://api.deepseek.com"
+  
+storage:
+  type: "local"
+  base_path: "./user_data"
+  backup_enabled: true
+  cleanup_days: 90
+
+tag_system:
+  dimensions:
+    emotional_traits: "情感特征"
+    interest_preferences: "兴趣偏好"
+    interaction_habits: "互动习惯"
+    value_principles: "价值观"
+  
+  extraction:
+    max_tags_per_dimension: 5
+    confidence_threshold: 0.3
+    decay_rate: 0.1
+  
+  weights:
+    time_decay_days: 30
+    usage_boost_factor: 1.2
+    consistency_weight: 0.8
+
+web:
+  host: "127.0.0.1"
+  port: 5000
+  secret_key: "lightrag_demo_secret_key"

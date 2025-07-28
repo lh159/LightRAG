@@ -1,0 +1,44 @@
+# LightRAG标签系统配置
+app:
+  name: "LightRAG-TagSystem-Demo"
+  version: "1.0.0"
+  debug: true
+
+llm:
+  provider: "openai"
+  model: "gpt-3.5-turbo"
+  api_key: "your-openai-api-key-here"
+  max_tokens: 500
+  temperature: 0.7
+
+embedding:
+  provider: "openai"
+  model: "text-embedding-ada-002"
+  
+storage:
+  type: "local"
+  base_path: "./user_data"
+  backup_enabled: true
+  cleanup_days: 90
+
+tag_system:
+  dimensions:
+    emotional_traits: "情感特征"
+    interest_preferences: "兴趣偏好"
+    interaction_habits: "互动习惯"
+    value_principles: "价值观"
+  
+  extraction:
+    max_tags_per_dimension: 5
+    confidence_threshold: 0.3
+    decay_rate: 0.1
+  
+  weights:
+    time_decay_days: 30
+    usage_boost_factor: 1.2
+    consistency_weight: 0.8
+
+web:
+  host: "127.0.0.1"
+  port: 5000
+  secret_key: "lightrag_demo_secret_key" 

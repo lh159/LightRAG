@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightRAG标签体系演示</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .chat-section {
+            flex: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-section {
+            flex: 1;
+            background: white;
+            margin: 20px 20px 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .chat-header {
+            background: #4A90E2;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .assistant-message {
+            background: white;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 10px 10px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+        
+        .chat-input button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+        
+        .profile-title {
+            color: #4A90E2;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4A90E2;
+        }
+        
+        .dimension-card {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .dimension-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .dimension-title {
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+        
+        .dimension-weight {
+            font-size: 0.9em;
+            color: #666;
+            background: #e7f3ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .tag-item {
+            background: #e7f3ff;
+            color: #0066cc;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .tag-dominant {
+            background: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .tag-weight {
+            font-size: 0.75em;
+            opacity: 0.8;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .metric-item {
+            background: #f0f8ff;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="chat-header">
+                <h2>🤖 LightRAG情感陪伴助手</h2>
+                <p>集成智能标签体系的个性化聊天Demo</p>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant-message">
+                    <strong>助手:</strong> 你好！我是你的情感陪伴助手。我会通过我们的对话逐渐了解你的特点和偏好，为你提供更个性化的回应。随便聊些什么吧！ 😊
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="输入你想说的话..." 
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">发送</button>
+                <button onclick="addKnowledge()" style="background: #28a745;">添加知识</button>
+                <button onclick="resetUser()" style="background: #dc3545;">重置</button>
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <h2 class="profile-title">👤 用户画像</h2>
+            
+            <div id="profileContent">
+                <p style="color: #666; text-align: center;">开始对话后，这里会显示你的个性化标签</p>
+            </div>
+            
+            <div id="metricsSection" style="display: none;">
+                <h3>📊 综合指标</h3>
+                <div class="metrics-grid" id="metricsGrid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 显示用户消息
+            addMessageToChat('user', message);
+            input.value = '';
+            
+            // 显示加载状态
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示助手回应
+                    addMessageToChat('assistant', data.response);
+                    
+                    // 更新用户画像
+                    updateProfile(data.user_profile);
+                    
+                    // 显示提取的标签（用于调试）
+                    if (Object.keys(data.extracted_tags).length > 0) {
+                        console.log('提取的标签:', data.extracted_tags);
+                    }
+                } else {
+                    addMessageToChat('assistant', '抱歉，处理消息时出现错误：' + data.error);
+                }
+                
+            } catch (error) {
+                addMessageToChat('assistant', '网络连接错误，请稍后重试。');
+                console.error('Error:', error);
+            } finally {
+                chatMessages.classList.remove('loading');
+            }
+        }
+        
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `<strong>你:</strong> ${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>助手:</strong> ${message}`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function updateProfile(profileData) {
+            const profileContent = document.getElementById('profileContent');
+            const metricsSection = document.getElementById('metricsSection');
+            const metricsGrid = document.getElementById('metricsGrid');
+            
+            if (!profileData || profileData.active_dimensions.length === 0) {
+                return;
+            }
+            
+            // 更新维度信息 - 支持多标签显示
+            let html = '';
+            profileData.active_dimensions.forEach(dim => {
+                html += `
+                    <div class="dimension-card">
+                        <div class="dimension-header">
+                            <h4 class="dimension-title">${dim.dimension}</h4>
+                            <span class="dimension-weight">权重: ${(dim.dimension_weight * 100).toFixed(1)}%</span>
+                        </div>
+                        <div class="tags-container">
+                `;
+                
+                // 显示该维度的所有标签
+                if (dim.tags && dim.tags.length > 0) {
+                    dim.tags.forEach((tag, index) => {
+                        const isDominant = tag.name === dim.dominant_tag;
+                        const tagClass = isDominant ? 'tag-item tag-dominant' : 'tag-item';
+                        
+                        html += `
+                            <div class="${tagClass}">
+                                <span>${tag.name}</span>
+                                <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                            </div>
+                        `;
+                    });
+                } else {
+                    // 兜底显示主导标签
+                    html += `
+                        <div class="tag-item tag-dominant">
+                            <span>${dim.dominant_tag || '暂无数据'}</span>
+                        </div>
+                    `;
+                }
+                
+                html += `
+                        </div>
+                        <div style="margin-top: 8px; font-size: 0.8em; color: #888;">
+                            稳定性: ${(dim.stability_score * 100).toFixed(0)}%
+                        </div>
+                    </div>
+                `;
+            });
+            
+            profileContent.innerHTML = html;
+            
+            // 更新指标
+            metricsGrid.innerHTML = `
+                <div class="metric-item">
+                    <div style="font-weight: bold;">情感健康</div>
+                    <div style="font-size: 1.2em; color: ${profileData.emotional_health_index > 0.6 ? '#28a745' : profileData.emotional_health_index > 0.4 ? '#ffc107' : '#dc3545'};">
+                        ${(profileData.emotional_health_index * 100).toFixed(0)}%
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div style="font-weight: bold;">画像成熟度</div>
+                    <div style="font-size: 1.2em; color: #007bff;">
+                        ${(profileData.profile_maturity * 100).toFixed(0)}%
+                    </div>
+                </div>
+            `;
+            
+            metricsSection.style.display = 'block';
+        }
+        
+        async function addKnowledge() {
+            const text = prompt('请输入要添加到知识库的内容:');
+            if (!text) return;
+            
+            try {
+                const response = await fetch('/api/add_knowledge', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    alert('知识添加成功！');
+                } else {
+                    alert('添加失败：' + data.message);
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        async function resetUser() {
+            if (!confirm('确定要重置用户会话吗？这将清除当前的对话历史和用户画像。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/reset_user', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 清空聊天记录
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="message assistant-message">
+                            <strong>助手:</strong> 你好！我是你的情感陪伴助手。我会通过我们的对话逐渐了解你的特点和偏好，为你提供更个性化的回应。随便聊些什么吧！ 😊
+                        </div>
+                    `;
+                    
+                    // 重置用户画像
+                    document.getElementById('profileContent').innerHTML = `
+                        <p style="color: #666; text-align: center;">开始对话后，这里会显示你的个性化标签</p>
+                    `;
+                    
+                    document.getElementById('metricsSection').style.display = 'none';
+                    
+                    alert('用户会话已重置！');
+                } else {
+                    alert('重置失败，请稍后重试');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 页面加载时获取用户画像
+        window.onload = async function() {
+            try {
+                const response = await fetch('/api/profile');
+                const data = await response.json();
+                
+                if (data.success && data.user_tags.computed_metrics.overall_profile_maturity > 0) {
+                    // 如果用户已有画像数据，显示它
+                    const dimensions = data.user_tags.tag_dimensions;
+                    const activeDimensions = [];
+                    
+                    for (const [key, dim] of Object.entries(dimensions)) {
+                        if (dim.dimension_weight > 0.1) {
+                            // 构建标签列表
+                            const tags = dim.active_tags ? dim.active_tags.map(tag => ({
+                                name: tag.tag_name,
+                                weight: tag.current_weight || 0,
+                                confidence: tag.avg_confidence || 0,
+                                evidence_count: tag.evidence_count || 0
+                            })) : [];
+                            
+                            activeDimensions.push({
+                                dimension: dim.dimension_name,
+                                dimension_key: key,
+                                dominant_tag: dim.dominant_tag,
+                                dimension_weight: dim.dimension_weight,
+                                stability_score: dim.stability_score,
+                                tags: tags
+                            });
+                        }
+                    }
+                    
+                    if (activeDimensions.length > 0) {
+                        updateProfile({
+                            active_dimensions: activeDimensions,
+                            emotional_health_index: data.user_tags.computed_metrics.emotional_health_index,
+                            profile_maturity: data.user_tags.computed_metrics.overall_profile_maturity
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log('获取用户画像失败:', error);
+            }
+        };
+    </script>
+</body>
+</html>

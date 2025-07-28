@@ -1,7 +1,7 @@
 {
   "user_id": "1ce0f3e5-97ea-4382-9814-f82249794f52",
   "created_at": "2025-07-28T11:10:08.317117",
-  "last_updated": "2025-07-28T11:33:03.655697",
+  "last_updated": "2025-07-28T13:52:43.214204",
   "tag_dimensions": {
     "emotional_traits": {
       "dimension_name": "情感特征维度",
@@ -49,12 +49,13 @@
         {
           "tag_name": "积极",
           "first_detected": "2025-07-28T11:12:41.065558",
-          "last_reinforced": "2025-07-28T11:12:41.065576",
-          "evidence_count": 1,
-          "total_confidence": 0.9,
-          "avg_confidence": 0.9,
+          "last_reinforced": "2025-07-28T13:51:56.689761",
+          "evidence_count": 2,
+          "total_confidence": 1.7000000000000002,
+          "avg_confidence": 0.8500000000000001,
           "decay_rate": 0.1,
-          "current_weight": 0.9
+          "current_weight": 0.8500000000000001,
+          "evidence": "总是积极面对生活"
         },
         {
           "tag_name": "开放",
@@ -125,11 +126,53 @@
           "avg_confidence": 0.7,
           "decay_rate": 0.1,
           "current_weight": 0.7
+        },
+        {
+          "tag_name": "乐观",
+          "first_detected": "2025-07-28T13:51:56.689743",
+          "last_reinforced": "2025-07-28T13:51:56.689752",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我很乐观",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "悲观",
+          "first_detected": "2025-07-28T13:52:43.214164",
+          "last_reinforced": "2025-07-28T13:52:43.214166",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "最近感觉很悲观",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "兴趣减退",
+          "first_detected": "2025-07-28T13:52:43.214168",
+          "last_reinforced": "2025-07-28T13:52:43.214168",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "对什么都提不起兴趣",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
         }
       ],
       "dominant_tag": "积极向往",
       "dimension_weight": 0.9,
-      "stability_score": 0.8208333333333333
+      "stability_score": 0.8266666666666667
     },
     "interest_preferences": {
       "dimension_name": "兴趣偏好维度",
@@ -275,12 +318,13 @@
         {
           "tag_name": "偏好简短交流",
           "first_detected": "2025-07-28T11:10:21.081429",
-          "last_reinforced": "2025-07-28T11:23:49.994406",
-          "evidence_count": 5,
-          "total_confidence": 3.0,
+          "last_reinforced": "2025-07-28T13:52:43.214180",
+          "evidence_count": 7,
+          "total_confidence": 4.2,
           "avg_confidence": 0.6,
           "decay_rate": 0.1,
-          "current_weight": 0.6
+          "current_weight": 0.6,
+          "evidence": "文本长度13字符; 文本长度17字符..."
         },
         {
           "tag_name": "邀请式",
@@ -369,17 +413,31 @@
           "avg_confidence": 0.7,
           "decay_rate": 0.1,
           "current_weight": 0.7
+        },
+        {
+          "tag_name": "积极生活",
+          "first_detected": "2025-07-28T13:51:56.689826",
+          "last_reinforced": "2025-07-28T13:51:56.689827",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "总是积极面对生活",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
         }
       ],
       "dominant_tag": "自我实现",
       "dimension_weight": 0.8,
-      "stability_score": 0.29
+      "stability_score": 0.37
     }
   },
   "computed_metrics": {
-    "emotional_health_index": 1.0,
+    "emotional_health_index": 0.6197183098591549,
     "interest_concentration": 0.0,
     "interaction_dependency": 0.0,
-    "overall_profile_maturity": 0.5762660256410256
+    "overall_profile_maturity": 0.5977243589743589
   }
 }

@@ -109,6 +109,7 @@
             margin-bottom: 15px;
             border-radius: 8px;
             border-left: 4px solid #007bff;
+            position: relative;
         }
         
         .dimension-header {
@@ -132,11 +133,36 @@
             border-radius: 12px;
         }
         
+        .dimension-stats {
+            display: flex;
+            gap: 10px;
+            font-size: 0.75em;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        .stat-item {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 8px;
+        }
+        
         .tags-container {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             margin-top: 8px;
+        }
+        
+        .tag-section {
+            margin-bottom: 10px;
+        }
+        
+        .tag-section-title {
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 5px;
         }
         
         .tag-item {
@@ -149,6 +175,13 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tag-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .tag-dominant {
@@ -157,9 +190,106 @@
             font-weight: bold;
         }
         
+        .tag-historical {
+            background: #ffc107;
+            color: #333;
+            opacity: 0.8;
+        }
+        
+        .tag-contextual {
+            background: #28a745;
+            color: white;
+        }
+        
+        .tag-conflict-resolved {
+            background: #fd7e14;
+            color: white;
+        }
+        
         .tag-weight {
             font-size: 0.75em;
             opacity: 0.8;
+        }
+        
+        .tag-details {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: #333;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            white-space: nowrap;
+            z-index: 1000;
+            max-width: 200px;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        
+        .tag-item:hover .tag-details {
+            display: block;
+        }
+        
+        .conflict-history {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        
+        .conflict-item {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 5px;
+            padding: 4px 8px;
+            background: #fff3cd;
+            border-radius: 4px;
+        }
+        
+        .trend-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7em;
+            font-weight: bold;
+        }
+        
+        .trend-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .trend-moderate {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .trend-stable {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .global-conflict-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .conflict-stats {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .conflict-stat {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.8em;
         }
         
         .metrics-grid {
@@ -293,8 +423,30 @@
                 return;
             }
             
-            // 更新维度信息 - 支持多标签显示
             let html = '';
+            
+            // 🆕 全局冲突摘要 - 总是显示用于调试
+            if (profileData.global_conflict_summary || true) {  // 临时总是显示
+                html += `
+                    <div class="global-conflict-summary">
+                        <h5 style="margin:0 0 10px 0; color:#495057;">🔧 冲突处理摘要</h5>
+                        <div class="conflict-stats">
+                            <div class="conflict-stat">
+                                <div style="font-weight:bold;">${profileData.global_conflict_summary.total_conflicts}</div>
+                                <div>总冲突数</div>
+                            </div>
+                            ${Object.entries(profileData.global_conflict_summary.conflict_type_stats || {}).map(([type, count]) => `
+                                <div class="conflict-stat">
+                                    <div style="font-weight:bold;">${count}</div>
+                                    <div>${getConflictTypeName(type)}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // 更新维度信息 - 增强版
             profileData.active_dimensions.forEach(dim => {
                 html += `
                     <div class="dimension-card">
@@ -302,43 +454,35 @@
                             <h4 class="dimension-title">${dim.dimension}</h4>
                             <span class="dimension-weight">权重: ${(dim.dimension_weight * 100).toFixed(1)}%</span>
                         </div>
-                        <div class="tags-container">
-                `;
-                
-                // 显示该维度的所有标签
-                if (dim.tags && dim.tags.length > 0) {
-                    dim.tags.forEach((tag, index) => {
-                        const isDominant = tag.name === dim.dominant_tag;
-                        const tagClass = isDominant ? 'tag-item tag-dominant' : 'tag-item';
                         
-                        html += `
-                            <div class="${tagClass}">
-                                <span>${tag.name}</span>
-                                <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                        <div class="dimension-stats">
+                            <span class="stat-item">标签: ${dim.total_tags || 0}</span>
+                            <span class="stat-item">冲突: ${dim.conflict_count || 0}</span>
+                            <span class="stat-item">稳定性: ${(dim.stability_score * 100).toFixed(0)}%</span>
+                            <span class="trend-indicator trend-${dim.tag_trend?.trend || 'stable'}">${dim.tag_trend?.trend || 'stable'}</span>
+                        </div>
+                        
+                        ${renderTagSection('🏷️ 当前标签', dim.current_tags, 'current')}
+                        ${renderTagSection('📜 历史标签', dim.historical_tags, 'historical')}
+                        ${renderTagSection('🎯 上下文标签', dim.contextual_tags, 'contextual')}
+                        
+                        ${dim.recent_conflicts && dim.recent_conflicts.length > 0 ? `
+                            <div class="conflict-history">
+                                <div class="tag-section-title">⚡ 最近冲突</div>
+                                ${dim.recent_conflicts.map(conflict => `
+                                    <div class="conflict-item" title="${conflict.explanation || ''}">
+                                        ${formatDateTime(conflict.timestamp)} - ${getConflictTypeName(conflict.conflict_type)}: ${conflict.action}
+                                    </div>
+                                `).join('')}
                             </div>
-                        `;
-                    });
-                } else {
-                    // 兜底显示主导标签
-                    html += `
-                        <div class="tag-item tag-dominant">
-                            <span>${dim.dominant_tag || '暂无数据'}</span>
-                        </div>
-                    `;
-                }
-                
-                html += `
-                        </div>
-                        <div style="margin-top: 8px; font-size: 0.8em; color: #888;">
-                            稳定性: ${(dim.stability_score * 100).toFixed(0)}%
-                        </div>
+                        ` : ''}
                     </div>
                 `;
             });
             
             profileContent.innerHTML = html;
             
-            // 更新指标
+            // 🆕 增强的指标显示
             metricsGrid.innerHTML = `
                 <div class="metric-item">
                     <div style="font-weight: bold;">情感健康</div>
@@ -352,9 +496,78 @@
                         ${(profileData.profile_maturity * 100).toFixed(0)}%
                     </div>
                 </div>
+                <div class="metric-item">
+                    <div style="font-weight: bold;">冲突处理</div>
+                    <div style="font-size: 1.2em; color: #fd7e14;">
+                        ${profileData.global_conflict_summary?.total_conflicts || 0}次
+                    </div>
+                </div>
+                <div class="metric-item">
+                    <div style="font-weight: bold;">活跃维度</div>
+                    <div style="font-size: 1.2em; color: #6f42c1;">
+                        ${profileData.active_dimensions.length}/4
+                    </div>
+                </div>
             `;
             
             metricsSection.style.display = 'block';
+        }
+        
+        function renderTagSection(title, tags, type) {
+            if (!tags || tags.length === 0) return '';
+            
+            return `
+                <div class="tag-section">
+                    <div class="tag-section-title">${title}</div>
+                    <div class="tags-container">
+                        ${tags.map(tag => {
+                            let tagClass = 'tag-item';
+                            if (type === 'historical') tagClass += ' tag-historical';
+                            else if (type === 'contextual') tagClass += ' tag-contextual';
+                            if (tag.conflict_resolved) tagClass += ' tag-conflict-resolved';
+                            
+                            return `
+                                <div class="${tagClass}">
+                                    <span>${tag.name}</span>
+                                    <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                                    <div class="tag-details">
+                                        <div><strong>置信度:</strong> ${(tag.confidence * 100).toFixed(0)}%</div>
+                                        <div><strong>证据次数:</strong> ${tag.evidence_count}</div>
+                                        <div><strong>首次发现:</strong> ${formatDateTime(tag.first_detected)}</div>
+                                        <div><strong>最后强化:</strong> ${formatDateTime(tag.last_reinforced)}</div>
+                                        ${tag.evidence ? `<div><strong>证据:</strong> ${tag.evidence}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getConflictTypeName(type) {
+            const names = {
+                'contradictory': '矛盾冲突',
+                'temporal_change': '时间变化',
+                'intensity_difference': '程度差异',
+                'context_dependent': '上下文依赖'
+            };
+            return names[type] || type;
+        }
+        
+        function formatDateTime(isoString) {
+            if (!isoString) return '未知';
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleString('zh-CN', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch {
+                return '未知';
+            }
         }
         
         async function addKnowledge() {

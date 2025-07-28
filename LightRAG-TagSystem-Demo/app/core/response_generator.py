@@ -1,5 +1,6 @@
 import sys
 import os
+from datetime import datetime
 from typing import Dict, List
 
 # 添加父目录到路径以便导入
@@ -145,31 +146,55 @@ class ResponseGenerator:
         return response.strip()
     
     def _get_profile_snapshot(self, user_tags: Dict) -> Dict:
-        """获取用户画像快照 - 支持多标签显示"""
+        """获取用户画像快照 - 增强版，包含冲突处理信息"""
         metrics = user_tags.get("computed_metrics", {})
         dimensions = user_tags.get("tag_dimensions", {})
         
         snapshot = {
             "emotional_health_index": metrics.get("emotional_health_index", 0.5),
             "profile_maturity": metrics.get("overall_profile_maturity", 0.0),
-            "active_dimensions": []
+            "active_dimensions": [],
+            "global_conflict_summary": self._get_global_conflict_summary(user_tags)
         }
         
         for dim_key, dim_data in dimensions.items():
             if dim_data.get("dimension_weight", 0) > 0.1:
                 active_tags = dim_data.get("active_tags", [])
                 
-                # 获取该维度的前5个最重要标签
-                sorted_tags = sorted(active_tags, key=lambda x: x.get("current_weight", 0), reverse=True)[:5]
+                # 获取该维度的前8个最重要标签（增加数量）
+                sorted_tags = sorted(active_tags, key=lambda x: x.get("current_weight", 0), reverse=True)[:8]
                 
-                tag_list = []
+                # 🆕 分类标签：当前标签、历史标签、上下文标签
+                current_tags = []
+                historical_tags = []
+                contextual_tags = []
+                
                 for tag in sorted_tags:
-                    tag_list.append({
+                    tag_info = {
                         "name": tag["tag_name"],
                         "weight": tag.get("current_weight", 0),
                         "confidence": tag.get("avg_confidence", 0),
-                        "evidence_count": tag.get("evidence_count", 0)
-                    })
+                        "evidence_count": tag.get("evidence_count", 0),
+                        "first_detected": tag.get("first_detected", ""),
+                        "last_reinforced": tag.get("last_reinforced", ""),
+                        "evidence": tag.get("evidence", "")[:100] + "..." if len(tag.get("evidence", "")) > 100 else tag.get("evidence", ""),
+                        "is_historical": tag.get("is_historical", False),
+                        "is_contextual": tag.get("is_contextual", False),
+                        "conflict_resolved": tag.get("conflict_resolved", False)
+                    }
+                    
+                    if tag.get("is_historical", False):
+                        historical_tags.append(tag_info)
+                    elif tag.get("is_contextual", False):
+                        contextual_tags.append(tag_info)
+                    else:
+                        current_tags.append(tag_info)
+                
+                # 🆕 获取最近的冲突历史
+                recent_conflicts = dim_data.get("conflict_history", [])[-3:]
+                
+                # 🆕 计算标签变化趋势
+                tag_trend = self._calculate_tag_trend(active_tags)
                 
                 snapshot["active_dimensions"].append({
                     "dimension": dim_data.get("dimension_name", dim_key),
@@ -177,7 +202,73 @@ class ResponseGenerator:
                     "dominant_tag": dim_data.get("dominant_tag"),
                     "dimension_weight": dim_data.get("dimension_weight", 0),
                     "stability_score": dim_data.get("stability_score", 0),
-                    "tags": tag_list  # 多个标签列表
+                    
+                    # 🆕 增强的标签分类
+                    "current_tags": current_tags,
+                    "historical_tags": historical_tags,
+                    "contextual_tags": contextual_tags,
+                    
+                    # 🆕 冲突和变化信息
+                    "recent_conflicts": recent_conflicts,
+                    "tag_trend": tag_trend,
+                    "total_tags": len(active_tags),
+                    "conflict_count": len(dim_data.get("conflict_history", [])),
+                    
+                    # 兼容性：保留原有的tags字段
+                    "tags": current_tags + contextual_tags
                 })
         
         return snapshot
+    
+    def _get_global_conflict_summary(self, user_tags: Dict) -> Dict:
+        """获取全局冲突摘要"""
+        all_conflicts = []
+        
+        # 收集所有维度的冲突
+        for dim_data in user_tags.get("tag_dimensions", {}).values():
+            all_conflicts.extend(dim_data.get("conflict_history", []))
+        
+        # 按时间排序，获取最近的冲突
+        all_conflicts.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+        recent_conflicts = all_conflicts[:5]
+        
+        # 统计冲突类型
+        conflict_types = {}
+        for conflict in all_conflicts:
+            conflict_type = conflict.get("conflict_type", "unknown")
+            conflict_types[conflict_type] = conflict_types.get(conflict_type, 0) + 1
+        
+        return {
+            "total_conflicts": len(all_conflicts),
+            "recent_conflicts": recent_conflicts,
+            "conflict_type_stats": conflict_types,
+            "last_conflict_time": recent_conflicts[0].get("timestamp", "") if recent_conflicts else ""
+        }
+    
+    def _calculate_tag_trend(self, active_tags: List[Dict]) -> Dict:
+        """计算标签变化趋势"""
+        if not active_tags:
+            return {"trend": "stable", "description": "暂无数据"}
+        
+        # 计算最近强化的标签数量
+        now = datetime.now()
+        recent_reinforced = 0
+        
+        for tag in active_tags:
+            try:
+                last_reinforced = datetime.fromisoformat(tag.get("last_reinforced", ""))
+                days_since = (now - last_reinforced).days
+                if days_since <= 7:  # 一周内强化的标签
+                    recent_reinforced += 1
+            except:
+                continue
+        
+        total_tags = len(active_tags)
+        recent_ratio = recent_reinforced / total_tags if total_tags > 0 else 0
+        
+        if recent_ratio > 0.5:
+            return {"trend": "active", "description": f"近期活跃，{recent_reinforced}/{total_tags}个标签被强化"}
+        elif recent_ratio > 0.2:
+            return {"trend": "moderate", "description": f"适度变化，{recent_reinforced}/{total_tags}个标签被强化"}
+        else:
+            return {"trend": "stable", "description": f"相对稳定，{recent_reinforced}/{total_tags}个标签被强化"}

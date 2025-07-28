@@ -1,0 +1,357 @@
+{
+  "user_id": "affec79f-8f45-424a-ba8a-8810dbf4e0b4",
+  "created_at": "2025-07-28T15:09:36.224647",
+  "last_updated": "2025-07-28T15:13:02.363868",
+  "tag_dimensions": {
+    "emotional_traits": {
+      "dimension_name": "情感特征维度",
+      "active_tags": [
+        {
+          "tag_name": "乐观",
+          "first_detected": "2025-07-28T15:09:46.545440",
+          "last_reinforced": "2025-07-28T15:09:46.545454",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我是一个非常乐观的人",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "积极",
+          "first_detected": "2025-07-28T15:09:46.545463",
+          "last_reinforced": "2025-07-28T15:10:24.340601",
+          "evidence_count": 2,
+          "total_confidence": 1.6,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "总是积极面对生活中的挑战; 我特别喜欢运动，每天都要跑步健身...",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "正能量",
+          "first_detected": "2025-07-28T15:09:46.545472",
+          "last_reinforced": "2025-07-28T15:09:46.545476",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "充满正能量",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "快乐",
+          "first_detected": "2025-07-28T15:10:24.340580",
+          "last_reinforced": "2025-07-28T15:10:24.340589",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "运动让我感到快乐和充实",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "情绪偏向积极",
+          "first_detected": "2025-07-28T15:10:24.340633",
+          "last_reinforced": "2025-07-28T15:10:24.340637",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "evidence": "积极词汇1个",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "独立",
+          "first_detected": "2025-07-28T15:11:09.600495",
+          "last_reinforced": "2025-07-28T15:11:09.600507",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我追求自由的生活方式，不喜欢被束缚",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "坚定",
+          "first_detected": "2025-07-28T15:11:09.600514",
+          "last_reinforced": "2025-07-28T15:11:09.600516",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "认为个人选择比集体规则更重要",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "悲观",
+          "first_detected": "2025-07-28T15:13:02.363537",
+          "last_reinforced": "2025-07-28T15:13:02.363542",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "最近感觉很悲观沮丧",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "沮丧",
+          "first_detected": "2025-07-28T15:13:02.363551",
+          "last_reinforced": "2025-07-28T15:13:02.363554",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "最近感觉很悲观沮丧",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "无意义感",
+          "first_detected": "2025-07-28T15:13:02.363561",
+          "last_reinforced": "2025-07-28T15:13:02.363564",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "觉得生活很无意义",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "情绪偏向消极",
+          "first_detected": "2025-07-28T15:13:02.363571",
+          "last_reinforced": "2025-07-28T15:13:02.363574",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "evidence": "消极词汇1个",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.7
+        }
+      ],
+      "dominant_tag": "乐观",
+      "dimension_weight": 0.9,
+      "stability_score": 0.8272727272727273,
+      "conflict_history": [
+        {
+          "timestamp": "2025-07-28T15:13:02.363146",
+          "conflict_type": "contradictory",
+          "action": "keep_existing",
+          "explanation": "检测到矛盾但保留原标签: \"乐观\" vs \"悲观\" (置信度差异不足)"
+        },
+        {
+          "timestamp": "2025-07-28T15:13:02.363484",
+          "conflict_type": "contradictory",
+          "action": "keep_existing",
+          "explanation": "检测到矛盾但保留原标签: \"积极\" vs \"情绪偏向消极\" (置信度差异不足)"
+        }
+      ]
+    },
+    "interest_preferences": {
+      "dimension_name": "兴趣偏好维度",
+      "active_tags": [
+        {
+          "tag_name": "运动",
+          "first_detected": "2025-07-28T15:10:24.340688",
+          "last_reinforced": "2025-07-28T15:10:24.340692",
+          "evidence_count": 1,
+          "total_confidence": 1.0,
+          "avg_confidence": 1.0,
+          "decay_rate": 0.1,
+          "evidence": "我特别喜欢运动，每天都要跑步健身",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 1.0
+        },
+        {
+          "tag_name": "健身",
+          "first_detected": "2025-07-28T15:10:24.340698",
+          "last_reinforced": "2025-07-28T15:10:24.340701",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "每天都要跑步健身",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "自由生活",
+          "first_detected": "2025-07-28T15:11:09.600578",
+          "last_reinforced": "2025-07-28T15:11:09.600581",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我追求自由的生活方式",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "个人主义",
+          "first_detected": "2025-07-28T15:11:09.600584",
+          "last_reinforced": "2025-07-28T15:11:09.600586",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "认为个人选择比集体规则更重要",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "兴趣减退",
+          "first_detected": "2025-07-28T15:13:02.363682",
+          "last_reinforced": "2025-07-28T15:13:02.363686",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "对什么都提不起兴趣",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        }
+      ],
+      "dominant_tag": "运动",
+      "dimension_weight": 1.0,
+      "stability_score": 0.44000000000000006,
+      "conflict_history": []
+    },
+    "interaction_habits": {
+      "dimension_name": "互动习惯维度",
+      "active_tags": [
+        {
+          "tag_name": "偏好简短交流",
+          "first_detected": "2025-07-28T15:10:24.340731",
+          "last_reinforced": "2025-07-28T15:13:02.363742",
+          "evidence_count": 2,
+          "total_confidence": 1.2,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "evidence": "文本长度29字符; 文本长度29字符...",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.6
+        }
+      ],
+      "dominant_tag": "偏好简短交流",
+      "dimension_weight": 0.6,
+      "stability_score": 0.06,
+      "conflict_history": []
+    },
+    "value_principles": {
+      "dimension_name": "价值观维度",
+      "active_tags": [
+        {
+          "tag_name": "积极面对挑战",
+          "first_detected": "2025-07-28T15:09:46.545549",
+          "last_reinforced": "2025-07-28T15:09:46.545554",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "总是积极面对生活中的挑战",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "健康生活",
+          "first_detected": "2025-07-28T15:10:24.340777",
+          "last_reinforced": "2025-07-28T15:10:24.340780",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "每天都要跑步健身，运动让我感到快乐和充实",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "个人自由",
+          "first_detected": "2025-07-28T15:11:09.600646",
+          "last_reinforced": "2025-07-28T15:11:09.600648",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我追求自由的生活方式，不喜欢被束缚",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "个人选择优先",
+          "first_detected": "2025-07-28T15:11:09.600652",
+          "last_reinforced": "2025-07-28T15:11:09.600654",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "认为个人选择比集体规则更重要",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        }
+      ],
+      "dominant_tag": "个人自由",
+      "dimension_weight": 0.9,
+      "stability_score": 0.33000000000000007,
+      "conflict_history": []
+    }
+  },
+  "computed_metrics": {
+    "emotional_health_index": 0.4000000000000001,
+    "interest_concentration": 0.0,
+    "interaction_dependency": 0.0,
+    "overall_profile_maturity": 0.41431818181818186
+  },
+  "global_conflict_log": []
+}

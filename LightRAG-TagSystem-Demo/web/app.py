@@ -136,6 +136,39 @@ def add_knowledge():
             "error": str(e)
         }), 500
 
+@app.route('/api/chat_history')
+@login_required
+def get_chat_history():
+    """获取历史对话记录 - 需要登录"""
+    try:
+        user_id = request.current_user["user_id"]
+        
+        # 从用户数据文件中读取历史对话
+        timeline_file = f"user_data/{user_id}/tag_timeline.json"
+        messages = []
+        
+        if os.path.exists(timeline_file):
+            with open(timeline_file, 'r', encoding='utf-8') as f:
+                timeline_data = json.load(f)
+                
+                # 从时间轴中提取对话记录
+                for event in timeline_data.get('tag_events', []):
+                    if event.get('event_type') == 'tag_extraction':
+                        # 这里可以添加对话记录的提取逻辑
+                        # 目前先返回空数组，后续可以扩展
+                        pass
+        
+        return jsonify({
+            "success": True,
+            "messages": messages
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
 @app.route('/api/reset_user', methods=['POST'])
 @login_required
 def reset_user():

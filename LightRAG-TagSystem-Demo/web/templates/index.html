@@ -516,50 +516,13 @@
                 return;
             }
             
-            // 如果没有活跃维度，显示初始化状态
+            // 如果没有活跃维度，显示空状态
             if (profileData.active_dimensions.length === 0) {
                 profileContent.innerHTML = `
-                    <div class="profile-init-state">
-                        <div class="init-header">
-                            <h4 style="color: #007bff; margin: 0 0 10px 0;">🎯 用户画像初始化</h4>
-                            <p style="color: #666; margin: 0; font-size: 14px;">开始对话后，系统将自动分析并构建您的个性化标签</p>
-                        </div>
-                        
-                        <div class="init-dimensions">
-                            <div class="init-dimension">
-                                <div class="init-dimension-icon">💭</div>
-                                <div class="init-dimension-info">
-                                    <div class="init-dimension-name">情感特征</div>
-                                    <div class="init-dimension-desc">分析您的情绪倾向和心理特点</div>
-                                </div>
-                            </div>
-                            <div class="init-dimension">
-                                <div class="init-dimension-icon">🎨</div>
-                                <div class="init-dimension-info">
-                                    <div class="init-dimension-name">兴趣偏好</div>
-                                    <div class="init-dimension-desc">识别您感兴趣或反感的话题</div>
-                                </div>
-                            </div>
-                            <div class="init-dimension">
-                                <div class="init-dimension-icon">💬</div>
-                                <div class="init-dimension-info">
-                                    <div class="init-dimension-name">互动习惯</div>
-                                    <div class="init-dimension-desc">了解您的交流风格和回应偏好</div>
-                                </div>
-                            </div>
-                            <div class="init-dimension">
-                                <div class="init-dimension-icon">⭐</div>
-                                <div class="init-dimension-info">
-                                    <div class="init-dimension-name">价值观</div>
-                                    <div class="init-dimension-desc">识别您的原则立场和底线禁忌</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="init-tip">
-                            <p style="color: #28a745; font-size: 12px; margin: 10px 0 0 0;">
-                                💡 提示：与助手进行自然对话，系统会实时更新您的个性化标签
-                            </p>
+                    <div class="profile-empty-state">
+                        <div class="empty-header">
+                            <h4 style="color: #6c757d; margin: 0 0 10px 0;">📊 用户画像</h4>
+                            <p style="color: #666; margin: 0; font-size: 14px;">暂无个性化标签数据</p>
                         </div>
                     </div>
                 `;
@@ -735,6 +698,31 @@
             }
         }
         
+        function displayChatHistory(messages) {
+            // 显示历史对话记录
+            const chatMessages = document.getElementById('chatMessages');
+            
+            // 清空现有内容
+            chatMessages.innerHTML = '';
+            
+            // 添加历史消息
+            messages.forEach(message => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${message.sender}-message`;
+                
+                if (message.sender === 'user') {
+                    messageDiv.innerHTML = `<strong>你:</strong> ${message.content}`;
+                } else {
+                    messageDiv.innerHTML = `<strong>助手:</strong> ${message.content}`;
+                }
+                
+                chatMessages.appendChild(messageDiv);
+            });
+            
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
         async function addKnowledge() {
             const text = prompt('请输入要添加到知识库的内容:');
             if (!text) return;
@@ -780,12 +768,12 @@
                         </div>
                     `;
                     
-                    // 重置用户画像
-                    document.getElementById('profileContent').innerHTML = `
-                        <p style="color: #666; text-align: center;">开始对话后，这里会显示你的个性化标签</p>
-                    `;
-                    
-                    document.getElementById('metricsSection').style.display = 'none';
+                    // 重置用户画像 - 显示初始化状态
+                    updateProfile({
+                        active_dimensions: [],
+                        emotional_health_index: 0.5,
+                        profile_maturity: 0.0
+                    });
                     
                     alert('用户会话已重置！');
                 } else {
@@ -796,26 +784,41 @@
             }
         }
         
-        // 页面加载时获取用户画像
+        // 页面加载时获取用户画像和历史对话
         window.onload = async function() {
             try {
-                const response = await fetch('/api/profile');
-                const data = await response.json();
+                // 获取用户画像
+                const profileResponse = await fetch('/api/profile');
+                const profileData = await profileResponse.json();
                 
-                if (data.success) {
-                    // 无论是否有画像数据，都尝试显示用户画像
-                    const dimensions = data.user_tags.tag_dimensions;
+                // 获取历史对话记录
+                const chatResponse = await fetch('/api/chat_history');
+                const chatData = await chatResponse.json();
+                
+                if (profileData.success) {
+                    const dimensions = profileData.user_tags.tag_dimensions;
                     const activeDimensions = [];
                     
                     for (const [key, dim] of Object.entries(dimensions)) {
                         if (dim.dimension_weight > 0.1) {
-                            // 构建标签列表
-                            const tags = dim.active_tags ? dim.active_tags.map(tag => ({
+                            // 构建完整的标签信息
+                            const activeTags = dim.active_tags ? dim.active_tags.map(tag => ({
                                 name: tag.tag_name,
                                 weight: tag.current_weight || 0,
                                 confidence: tag.avg_confidence || 0,
-                                evidence_count: tag.evidence_count || 0
+                                evidence_count: tag.evidence_count || 0,
+                                first_detected: tag.first_detected,
+                                last_reinforced: tag.last_reinforced,
+                                evidence: tag.evidence,
+                                is_historical: tag.is_historical || false,
+                                is_contextual: tag.is_contextual || false,
+                                conflict_resolved: tag.conflict_resolved || false
                             })) : [];
+                            
+                            // 根据标签类型分类
+                            const currentTags = activeTags.filter(tag => !tag.is_historical && !tag.is_contextual);
+                            const historicalTags = activeTags.filter(tag => tag.is_historical);
+                            const contextualTags = activeTags.filter(tag => tag.is_contextual);
                             
                             activeDimensions.push({
                                 dimension: dim.dimension_name,
@@ -823,30 +826,36 @@
                                 dominant_tag: dim.dominant_tag,
                                 dimension_weight: dim.dimension_weight,
                                 stability_score: dim.stability_score,
-                                tags: tags
+                                total_tags: dim.total_tags || 0,
+                                conflict_count: dim.conflict_count || 0,
+                                tag_trend: dim.tag_trend || { trend: 'stable' },
+                                current_tags: currentTags,
+                                historical_tags: historicalTags,
+                                contextual_tags: contextualTags,
+                                recent_conflicts: dim.recent_conflicts || []
                             });
                         }
                     }
                     
-                    if (activeDimensions.length > 0) {
-                        // 有活跃维度，显示完整画像
-                        updateProfile({
-                            active_dimensions: activeDimensions,
-                            emotional_health_index: data.user_tags.computed_metrics.emotional_health_index,
-                            profile_maturity: data.user_tags.computed_metrics.overall_profile_maturity
-                        });
-                    } else {
-                        // 没有活跃维度，显示初始化状态
-                        updateProfile({
-                            active_dimensions: [],
-                            emotional_health_index: 0.5,
-                            profile_maturity: 0.0
-                        });
+                    // 显示用户画像
+                    updateProfile({
+                        active_dimensions: activeDimensions,
+                        emotional_health_index: profileData.user_tags.computed_metrics.emotional_health_index,
+                        profile_maturity: profileData.user_tags.computed_metrics.overall_profile_maturity,
+                        global_conflict_summary: profileData.user_tags.global_conflict_summary || {
+                            total_conflicts: 0,
+                            conflict_type_stats: {}
+                        }
+                    });
+                    
+                    // 显示历史对话记录
+                    if (chatData.success && chatData.messages && chatData.messages.length > 0) {
+                        displayChatHistory(chatData.messages);
                     }
                 }
             } catch (error) {
-                console.log('获取用户画像失败:', error);
-                // 即使获取失败，也显示初始化状态
+                console.log('获取用户数据失败:', error);
+                // 如果获取失败，显示初始化状态
                 updateProfile({
                     active_dimensions: [],
                     emotional_health_index: 0.5,

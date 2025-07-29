@@ -43,6 +43,32 @@
             color: white;
             padding: 15px 20px;
             border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
         }
         
         .chat-messages {
@@ -316,8 +342,11 @@
     <div class="container">
         <div class="chat-section">
             <div class="chat-header">
-                <h2>🤖 LightRAG情感陪伴助手</h2>
-                <p>集成智能标签体系的个性化聊天Demo</p>
+                <div class="header-content">
+                    <h2>🤖 LightRAG情感陪伴助手</h2>
+                    <p>集成智能标签体系的个性化聊天Demo</p>
+                </div>
+                <a href="/logout" class="logout-btn">🚪 退出登录</a>
             </div>
             
             <div class="chat-messages" id="chatMessages">
@@ -472,9 +501,9 @@
                                 ${dim.recent_conflicts.map(conflict => `
                                     <div class="conflict-item" title="${conflict.explanation || ''}">
                                         ${formatDateTime(conflict.timestamp)} - ${getConflictTypeName(conflict.conflict_type)}: ${conflict.action}
-                                    </div>
+                        </div>
                                 `).join('')}
-                            </div>
+                        </div>
                         ` : ''}
                     </div>
                 `;

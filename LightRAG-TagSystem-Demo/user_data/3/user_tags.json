@@ -1,0 +1,46 @@
+{
+  "user_id": "3",
+  "created_at": "2025-07-29T10:48:01.318205",
+  "last_updated": "2025-07-29T10:48:01.318209",
+  "tag_dimensions": {
+    "emotional_traits": {
+      "dimension_name": "情感特征维度",
+      "active_tags": [],
+      "dominant_tag": null,
+      "dimension_weight": 0.0,
+      "stability_score": 0.0,
+      "conflict_history": []
+    },
+    "interest_preferences": {
+      "dimension_name": "兴趣偏好维度",
+      "active_tags": [],
+      "dominant_tag": null,
+      "dimension_weight": 0.0,
+      "stability_score": 0.0,
+      "conflict_history": []
+    },
+    "interaction_habits": {
+      "dimension_name": "互动习惯维度",
+      "active_tags": [],
+      "dominant_tag": null,
+      "dimension_weight": 0.0,
+      "stability_score": 0.0,
+      "conflict_history": []
+    },
+    "value_principles": {
+      "dimension_name": "价值观维度",
+      "active_tags": [],
+      "dominant_tag": null,
+      "dimension_weight": 0.0,
+      "stability_score": 0.0,
+      "conflict_history": []
+    }
+  },
+  "computed_metrics": {
+    "emotional_health_index": 0.5,
+    "interest_concentration": 0.0,
+    "interaction_dependency": 0.0,
+    "overall_profile_maturity": 0.0
+  },
+  "global_conflict_log": []
+}

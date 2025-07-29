@@ -1,0 +1,260 @@
+{
+  "user_id": "2",
+  "created_at": "2025-07-29T10:35:33.290032",
+  "last_updated": "2025-07-29T10:40:22.578909",
+  "tag_dimensions": {
+    "emotional_traits": {
+      "dimension_name": "情感特征维度",
+      "active_tags": [
+        {
+          "tag_name": "中性",
+          "first_detected": "2025-07-29T10:35:39.307006",
+          "last_reinforced": "2025-07-29T10:35:39.307019",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "你好，我是一个测试用户",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "兴奋",
+          "first_detected": "2025-07-29T10:39:07.682550",
+          "last_reinforced": "2025-07-29T10:39:07.682554",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我特别喜欢看科幻电影，尤其是关于人工智能的！",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "震撼",
+          "first_detected": "2025-07-29T10:39:07.682558",
+          "last_reinforced": "2025-07-29T10:39:07.682559",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "最近在看《银翼杀手2049》，真的太震撼了。",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "期待",
+          "first_detected": "2025-07-29T10:39:07.682561",
+          "last_reinforced": "2025-07-29T10:39:07.682563",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "这种未来科技的想象让我对AI发展充满期待。",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "热情",
+          "first_detected": "2025-07-29T10:40:22.578743",
+          "last_reinforced": "2025-07-29T10:40:22.578746",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "我也喜欢机械姬和她",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "友好",
+          "first_detected": "2025-07-29T10:40:22.578750",
+          "last_reinforced": "2025-07-29T10:40:22.578751",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "evidence": "以后要不要一起去看",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.7
+        }
+      ],
+      "dominant_tag": "中性",
+      "dimension_weight": 0.9,
+      "stability_score": 0.49000000000000005,
+      "conflict_history": []
+    },
+    "interest_preferences": {
+      "dimension_name": "兴趣偏好维度",
+      "active_tags": [
+        {
+          "tag_name": "科幻电影",
+          "first_detected": "2025-07-29T10:39:07.682583",
+          "last_reinforced": "2025-07-29T10:40:22.578801",
+          "evidence_count": 2,
+          "total_confidence": 1.9,
+          "avg_confidence": 0.95,
+          "decay_rate": 0.1,
+          "evidence": "我特别喜欢看科幻电影; 我也喜欢机械姬和她...",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.95
+        },
+        {
+          "tag_name": "人工智能",
+          "first_detected": "2025-07-29T10:39:07.682587",
+          "last_reinforced": "2025-07-29T10:39:07.682588",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "尤其是关于人工智能的！",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "未来科技",
+          "first_detected": "2025-07-29T10:39:07.682591",
+          "last_reinforced": "2025-07-29T10:39:07.682592",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "这种未来科技的想象让我对AI发展充满期待。",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "社交活动",
+          "first_detected": "2025-07-29T10:40:22.578807",
+          "last_reinforced": "2025-07-29T10:40:22.578808",
+          "evidence_count": 1,
+          "total_confidence": 0.6,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "evidence": "以后要不要一起去看",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.6
+        }
+      ],
+      "dominant_tag": "科幻电影",
+      "dimension_weight": 0.95,
+      "stability_score": 0.325,
+      "conflict_history": []
+    },
+    "interaction_habits": {
+      "dimension_name": "互动习惯维度",
+      "active_tags": [
+        {
+          "tag_name": "直接",
+          "first_detected": "2025-07-29T10:35:39.307077",
+          "last_reinforced": "2025-07-29T10:35:39.307080",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "你好，我是一个测试用户",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "偏好简短交流",
+          "first_detected": "2025-07-29T10:35:39.307085",
+          "last_reinforced": "2025-07-29T10:40:22.578868",
+          "evidence_count": 2,
+          "total_confidence": 1.2,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "evidence": "文本长度11字符; 文本长度25字符...",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.6
+        },
+        {
+          "tag_name": "邀请式交流",
+          "first_detected": "2025-07-29T10:40:22.578860",
+          "last_reinforced": "2025-07-29T10:40:22.578862",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "以后要不要一起去看",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "分享兴趣",
+          "first_detected": "2025-07-29T10:40:22.578864",
+          "last_reinforced": "2025-07-29T10:40:22.578866",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "evidence": "我也喜欢机械姬和她，你也看过吗",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.7
+        }
+      ],
+      "dominant_tag": "直接",
+      "dimension_weight": 0.8,
+      "stability_score": 0.29,
+      "conflict_history": []
+    },
+    "value_principles": {
+      "dimension_name": "价值观维度",
+      "active_tags": [
+        {
+          "tag_name": "科技乐观主义",
+          "first_detected": "2025-07-29T10:39:07.682613",
+          "last_reinforced": "2025-07-29T10:39:07.682614",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "evidence": "这种未来科技的想象让我对AI发展充满期待。",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.7
+        }
+      ],
+      "dominant_tag": "科技乐观主义",
+      "dimension_weight": 0.7,
+      "stability_score": 0.06999999999999999,
+      "conflict_history": []
+    }
+  },
+  "computed_metrics": {
+    "emotional_health_index": 0.5,
+    "interest_concentration": 0.0,
+    "interaction_dependency": 0.0,
+    "overall_profile_maturity": 0.29375
+  },
+  "global_conflict_log": []
+}

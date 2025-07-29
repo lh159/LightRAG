@@ -1,0 +1,443 @@
+{
+  "user_id": "1ce0f3e5-97ea-4382-9814-f82249794f52",
+  "created_at": "2025-07-28T11:10:08.317117",
+  "last_updated": "2025-07-28T13:52:43.214204",
+  "tag_dimensions": {
+    "emotional_traits": {
+      "dimension_name": "情感特征维度",
+      "active_tags": [
+        {
+          "tag_name": "沮丧",
+          "first_detected": "2025-07-28T11:10:21.081382",
+          "last_reinforced": "2025-07-28T11:10:21.081400",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "无助感",
+          "first_detected": "2025-07-28T11:10:21.081405",
+          "last_reinforced": "2025-07-28T11:10:21.081407",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "积极向往",
+          "first_detected": "2025-07-28T11:11:33.976597",
+          "last_reinforced": "2025-07-28T11:11:33.976615",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "热情",
+          "first_detected": "2025-07-28T11:11:33.976620",
+          "last_reinforced": "2025-07-28T11:12:41.065583",
+          "evidence_count": 2,
+          "total_confidence": 1.6,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "积极",
+          "first_detected": "2025-07-28T11:12:41.065558",
+          "last_reinforced": "2025-07-28T13:51:56.689761",
+          "evidence_count": 2,
+          "total_confidence": 1.7000000000000002,
+          "avg_confidence": 0.8500000000000001,
+          "decay_rate": 0.1,
+          "current_weight": 0.8500000000000001,
+          "evidence": "总是积极面对生活"
+        },
+        {
+          "tag_name": "开放",
+          "first_detected": "2025-07-28T11:12:41.065594",
+          "last_reinforced": "2025-07-28T11:14:23.321510",
+          "evidence_count": 2,
+          "total_confidence": 1.5,
+          "avg_confidence": 0.75,
+          "decay_rate": 0.1,
+          "current_weight": 0.75
+        },
+        {
+          "tag_name": "寻求建议",
+          "first_detected": "2025-07-28T11:14:23.321531",
+          "last_reinforced": "2025-07-28T11:14:23.321533",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "无聊",
+          "first_detected": "2025-07-28T11:23:49.994326",
+          "last_reinforced": "2025-07-28T11:23:49.994348",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "寻求帮助",
+          "first_detected": "2025-07-28T11:23:49.994357",
+          "last_reinforced": "2025-07-28T11:23:49.994359",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "兴奋",
+          "first_detected": "2025-07-28T11:33:03.655642",
+          "last_reinforced": "2025-07-28T11:33:03.655653",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "震撼",
+          "first_detected": "2025-07-28T11:33:03.655655",
+          "last_reinforced": "2025-07-28T11:33:03.655655",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "期待",
+          "first_detected": "2025-07-28T11:33:03.655656",
+          "last_reinforced": "2025-07-28T11:33:03.655657",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "乐观",
+          "first_detected": "2025-07-28T13:51:56.689743",
+          "last_reinforced": "2025-07-28T13:51:56.689752",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "我很乐观",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "悲观",
+          "first_detected": "2025-07-28T13:52:43.214164",
+          "last_reinforced": "2025-07-28T13:52:43.214166",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "evidence": "最近感觉很悲观",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "兴趣减退",
+          "first_detected": "2025-07-28T13:52:43.214168",
+          "last_reinforced": "2025-07-28T13:52:43.214168",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "对什么都提不起兴趣",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        }
+      ],
+      "dominant_tag": "积极向往",
+      "dimension_weight": 0.9,
+      "stability_score": 0.8266666666666667
+    },
+    "interest_preferences": {
+      "dimension_name": "兴趣偏好维度",
+      "active_tags": [
+        {
+          "tag_name": "梦想追求",
+          "first_detected": "2025-07-28T11:10:21.081423",
+          "last_reinforced": "2025-07-28T11:10:21.081424",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "音乐",
+          "first_detected": "2025-07-28T11:11:33.976642",
+          "last_reinforced": "2025-07-28T11:11:33.976644",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "表演",
+          "first_detected": "2025-07-28T11:11:33.976647",
+          "last_reinforced": "2025-07-28T11:12:41.065626",
+          "evidence_count": 2,
+          "total_confidence": 1.5,
+          "avg_confidence": 0.75,
+          "decay_rate": 0.1,
+          "current_weight": 0.75
+        },
+        {
+          "tag_name": "脱口秀",
+          "first_detected": "2025-07-28T11:12:41.065620",
+          "last_reinforced": "2025-07-28T11:12:41.065623",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "社交活动",
+          "first_detected": "2025-07-28T11:12:41.065629",
+          "last_reinforced": "2025-07-28T11:12:41.065631",
+          "evidence_count": 1,
+          "total_confidence": 0.6,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "current_weight": 0.6
+        },
+        {
+          "tag_name": "电影",
+          "first_detected": "2025-07-28T11:14:23.321555",
+          "last_reinforced": "2025-07-28T11:14:23.321556",
+          "evidence_count": 1,
+          "total_confidence": 1.0,
+          "avg_confidence": 1.0,
+          "decay_rate": 0.1,
+          "current_weight": 1.0
+        },
+        {
+          "tag_name": "娱乐活动",
+          "first_detected": "2025-07-28T11:14:23.321559",
+          "last_reinforced": "2025-07-28T11:14:23.321561",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "科幻爱好者",
+          "first_detected": "2025-07-28T11:15:11.235570",
+          "last_reinforced": "2025-07-28T11:15:11.235579",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "影视娱乐",
+          "first_detected": "2025-07-28T11:15:11.235583",
+          "last_reinforced": "2025-07-28T11:15:11.235585",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "休闲活动",
+          "first_detected": "2025-07-28T11:23:49.994388",
+          "last_reinforced": "2025-07-28T11:23:49.994390",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "科幻电影",
+          "first_detected": "2025-07-28T11:33:03.655667",
+          "last_reinforced": "2025-07-28T11:33:03.655667",
+          "evidence_count": 1,
+          "total_confidence": 0.9,
+          "avg_confidence": 0.9,
+          "decay_rate": 0.1,
+          "current_weight": 0.9
+        },
+        {
+          "tag_name": "人工智能",
+          "first_detected": "2025-07-28T11:33:03.655668",
+          "last_reinforced": "2025-07-28T11:33:03.655669",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "未来科技",
+          "first_detected": "2025-07-28T11:33:03.655670",
+          "last_reinforced": "2025-07-28T11:33:03.655670",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        }
+      ],
+      "dominant_tag": "电影",
+      "dimension_weight": 1.0,
+      "stability_score": 0.8192307692307692
+    },
+    "interaction_habits": {
+      "dimension_name": "互动习惯维度",
+      "active_tags": [
+        {
+          "tag_name": "偏好简短交流",
+          "first_detected": "2025-07-28T11:10:21.081429",
+          "last_reinforced": "2025-07-28T13:52:43.214180",
+          "evidence_count": 7,
+          "total_confidence": 4.2,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "current_weight": 0.6,
+          "evidence": "文本长度13字符; 文本长度17字符..."
+        },
+        {
+          "tag_name": "邀请式",
+          "first_detected": "2025-07-28T11:12:41.065643",
+          "last_reinforced": "2025-07-28T11:12:41.065646",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "合作倾向",
+          "first_detected": "2025-07-28T11:12:41.065649",
+          "last_reinforced": "2025-07-28T11:12:41.065651",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "直接提问",
+          "first_detected": "2025-07-28T11:14:23.321570",
+          "last_reinforced": "2025-07-28T11:23:49.994403",
+          "evidence_count": 2,
+          "total_confidence": 1.7000000000000002,
+          "avg_confidence": 0.8500000000000001,
+          "decay_rate": 0.1,
+          "current_weight": 0.8500000000000001
+        },
+        {
+          "tag_name": "寻求互动",
+          "first_detected": "2025-07-28T11:14:23.321573",
+          "last_reinforced": "2025-07-28T11:14:23.321575",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        }
+      ],
+      "dominant_tag": "直接提问",
+      "dimension_weight": 0.8500000000000001,
+      "stability_score": 0.375
+    },
+    "value_principles": {
+      "dimension_name": "价值观维度",
+      "active_tags": [
+        {
+          "tag_name": "自我实现",
+          "first_detected": "2025-07-28T11:10:21.081433",
+          "last_reinforced": "2025-07-28T11:10:21.081434",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "家庭关系",
+          "first_detected": "2025-07-28T11:10:21.081436",
+          "last_reinforced": "2025-07-28T11:10:21.081437",
+          "evidence_count": 1,
+          "total_confidence": 0.6,
+          "avg_confidence": 0.6,
+          "decay_rate": 0.1,
+          "current_weight": 0.6
+        },
+        {
+          "tag_name": "追求梦想",
+          "first_detected": "2025-07-28T11:11:33.976669",
+          "last_reinforced": "2025-07-28T11:11:33.976671",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "current_weight": 0.8
+        },
+        {
+          "tag_name": "技术乐观主义",
+          "first_detected": "2025-07-28T11:33:03.655675",
+          "last_reinforced": "2025-07-28T11:33:03.655676",
+          "evidence_count": 1,
+          "total_confidence": 0.7,
+          "avg_confidence": 0.7,
+          "decay_rate": 0.1,
+          "current_weight": 0.7
+        },
+        {
+          "tag_name": "积极生活",
+          "first_detected": "2025-07-28T13:51:56.689826",
+          "last_reinforced": "2025-07-28T13:51:56.689827",
+          "evidence_count": 1,
+          "total_confidence": 0.8,
+          "avg_confidence": 0.8,
+          "decay_rate": 0.1,
+          "evidence": "总是积极面对生活",
+          "is_historical": false,
+          "is_contextual": false,
+          "conflict_resolved": false,
+          "current_weight": 0.8
+        }
+      ],
+      "dominant_tag": "自我实现",
+      "dimension_weight": 0.8,
+      "stability_score": 0.37
+    }
+  },
+  "computed_metrics": {
+    "emotional_health_index": 0.6197183098591549,
+    "interest_concentration": 0.0,
+    "interaction_dependency": 0.0,
+    "overall_profile_maturity": 0.5977243589743589
+  }
+}

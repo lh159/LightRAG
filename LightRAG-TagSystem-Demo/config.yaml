@@ -1,8 +1,22 @@
-# LightRAG标签系统配置 - DeepSeek版本
+# LightRAG标签系统配置 - 用户系统版本
 app:
   name: "LightRAG-TagSystem-Demo"
-  version: "1.0.0"
+  version: "2.0.0"
   debug: true
+
+# 数据库配置
+database:
+  type: "sqlite"
+  path: "database/users.db"
+  backup_enabled: true
+  backup_interval_hours: 24
+
+# 认证配置
+auth:
+  jwt_secret: "your-super-secret-jwt-key-change-this"
+  session_timeout_hours: 24
+  password_min_length: 6
+  username_min_length: 3
 
 llm:
   provider: "deepseek"
@@ -44,3 +58,4 @@ web:
   host: "127.0.0.1"
   port: 5000
   secret_key: "lightrag_demo_secret_key"
+  session_timeout_hours: 24

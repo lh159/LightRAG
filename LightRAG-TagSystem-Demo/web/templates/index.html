@@ -198,6 +198,70 @@
             border-radius: 15px;
             font-size: 0.85em;
             position: relative;
+            
+        /* 初始化状态样式 */
+        .profile-init-state {
+            padding: 20px 0;
+        }
+        
+        .init-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .init-dimensions {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .init-dimension {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+        
+        .init-dimension:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .init-dimension-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 40px;
+            text-align: center;
+        }
+        
+        .init-dimension-info {
+            flex: 1;
+        }
+        
+        .init-dimension-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .init-dimension-desc {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .init-tip {
+            margin-top: 20px;
+            padding: 15px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            text-align: center;
+        }
             display: flex;
             align-items: center;
             gap: 5px;
@@ -448,7 +512,79 @@
             const metricsSection = document.getElementById('metricsSection');
             const metricsGrid = document.getElementById('metricsGrid');
             
-            if (!profileData || profileData.active_dimensions.length === 0) {
+            if (!profileData) {
+                return;
+            }
+            
+            // 如果没有活跃维度，显示初始化状态
+            if (profileData.active_dimensions.length === 0) {
+                profileContent.innerHTML = `
+                    <div class="profile-init-state">
+                        <div class="init-header">
+                            <h4 style="color: #007bff; margin: 0 0 10px 0;">🎯 用户画像初始化</h4>
+                            <p style="color: #666; margin: 0; font-size: 14px;">开始对话后，系统将自动分析并构建您的个性化标签</p>
+                        </div>
+                        
+                        <div class="init-dimensions">
+                            <div class="init-dimension">
+                                <div class="init-dimension-icon">💭</div>
+                                <div class="init-dimension-info">
+                                    <div class="init-dimension-name">情感特征</div>
+                                    <div class="init-dimension-desc">分析您的情绪倾向和心理特点</div>
+                                </div>
+                            </div>
+                            <div class="init-dimension">
+                                <div class="init-dimension-icon">🎨</div>
+                                <div class="init-dimension-info">
+                                    <div class="init-dimension-name">兴趣偏好</div>
+                                    <div class="init-dimension-desc">识别您感兴趣或反感的话题</div>
+                                </div>
+                            </div>
+                            <div class="init-dimension">
+                                <div class="init-dimension-icon">💬</div>
+                                <div class="init-dimension-info">
+                                    <div class="init-dimension-name">互动习惯</div>
+                                    <div class="init-dimension-desc">了解您的交流风格和回应偏好</div>
+                                </div>
+                            </div>
+                            <div class="init-dimension">
+                                <div class="init-dimension-icon">⭐</div>
+                                <div class="init-dimension-info">
+                                    <div class="init-dimension-name">价值观</div>
+                                    <div class="init-dimension-desc">识别您的原则立场和底线禁忌</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="init-tip">
+                            <p style="color: #28a745; font-size: 12px; margin: 10px 0 0 0;">
+                                💡 提示：与助手进行自然对话，系统会实时更新您的个性化标签
+                            </p>
+                        </div>
+                    </div>
+                `;
+                
+                // 显示基础指标
+                metricsGrid.innerHTML = `
+                    <div class="metric-item">
+                        <div style="font-weight: bold;">情感健康</div>
+                        <div style="font-size: 1.2em; color: #6c757d;">--</div>
+                    </div>
+                    <div class="metric-item">
+                        <div style="font-weight: bold;">画像成熟度</div>
+                        <div style="font-size: 1.2em; color: #6c757d;">0%</div>
+                    </div>
+                    <div class="metric-item">
+                        <div style="font-weight: bold;">冲突处理</div>
+                        <div style="font-size: 1.2em; color: #6c757d;">0次</div>
+                    </div>
+                    <div class="metric-item">
+                        <div style="font-weight: bold;">活跃维度</div>
+                        <div style="font-size: 1.2em; color: #6c757d;">0/4</div>
+                    </div>
+                `;
+                
+                metricsSection.style.display = 'block';
                 return;
             }
             
@@ -666,8 +802,8 @@
                 const response = await fetch('/api/profile');
                 const data = await response.json();
                 
-                if (data.success && data.user_tags.computed_metrics.overall_profile_maturity > 0) {
-                    // 如果用户已有画像数据，显示它
+                if (data.success) {
+                    // 无论是否有画像数据，都尝试显示用户画像
                     const dimensions = data.user_tags.tag_dimensions;
                     const activeDimensions = [];
                     
@@ -693,15 +829,29 @@
                     }
                     
                     if (activeDimensions.length > 0) {
+                        // 有活跃维度，显示完整画像
                         updateProfile({
                             active_dimensions: activeDimensions,
                             emotional_health_index: data.user_tags.computed_metrics.emotional_health_index,
                             profile_maturity: data.user_tags.computed_metrics.overall_profile_maturity
                         });
+                    } else {
+                        // 没有活跃维度，显示初始化状态
+                        updateProfile({
+                            active_dimensions: [],
+                            emotional_health_index: 0.5,
+                            profile_maturity: 0.0
+                        });
                     }
                 }
             } catch (error) {
                 console.log('获取用户画像失败:', error);
+                // 即使获取失败，也显示初始化状态
+                updateProfile({
+                    active_dimensions: [],
+                    emotional_health_index: 0.5,
+                    profile_maturity: 0.0
+                });
             }
         };
     </script>

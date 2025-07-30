@@ -56,6 +56,6 @@ tag_system:
 
 web:
   host: "127.0.0.1"
-  port: 5000
+  port: 8080
   secret_key: "lightrag_demo_secret_key"
   session_timeout_hours: 24

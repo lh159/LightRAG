@@ -53,6 +53,14 @@ tag_system:
     time_decay_days: 30
     usage_boost_factor: 1.2
     consistency_weight: 0.8
+  
+  # 🚀 性能优化配置
+  performance:
+    enable_debug_logs: false           # 关闭调试日志以提升性能
+    enable_conflict_detection: true    # 启用冲突检测
+    conflict_detection_mode: "fast"    # 冲突检测模式: "fast" | "full"
+    max_tags_for_temporal_check: 10    # 时间性检查的最大标签数
+    cache_conflict_results: true       # 缓存冲突检测结果
 
 web:
   host: "127.0.0.1"

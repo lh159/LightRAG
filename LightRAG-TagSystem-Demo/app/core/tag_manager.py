@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import yaml
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
@@ -40,22 +41,67 @@ class TagConflictResolver:
         }
     
     def resolve_conflicts(self, dimension: str, existing_tags: List[Dict], new_tags: List[TagInfo]) -> List[ConflictResolution]:
-        """解决标签冲突"""
+        """解决标签冲突 - 性能优化版"""
+        # 🚀 性能优化：快速返回空结果
+        if not existing_tags or not new_tags:
+            return []
+        
         resolutions = []
+        
+        # 🚀 性能优化：预处理现有标签名称集合，避免重复查找
+        existing_names = {tag["tag_name"] for tag in existing_tags}
+        
         for new_tag in new_tags:
-            # 检查直接矛盾
-            contradiction = self._check_contradictory(dimension, existing_tags, new_tag)
+            # 🚀 性能优化：如果标签已存在，跳过冲突检测
+            if new_tag.name in existing_names:
+                continue
+                
+            # 检查直接矛盾（简化版）
+            contradiction = self._check_contradictory_fast(dimension, existing_tags, new_tag)
             if contradiction:
                 resolutions.append(contradiction)
                 continue
             
-            # 检查时间性变化
-            temporal = self._check_temporal_change(existing_tags, new_tag)
-            if temporal:
-                resolutions.append(temporal)
-                continue
+            # 🚀 性能优化：只在必要时检查时间性变化  
+            max_tags_for_temporal = getattr(self, 'max_tags_for_temporal_check', 10)
+            if len(existing_tags) < max_tags_for_temporal:
+                temporal = self._check_temporal_change(existing_tags, new_tag)
+                if temporal:
+                    resolutions.append(temporal)
+                    continue
         
         return resolutions
+    
+    def _check_contradictory_fast(self, dimension: str, existing_tags: List[Dict], new_tag: TagInfo) -> Optional[ConflictResolution]:
+        """快速矛盾检测 - 性能优化版"""
+        # 🚀 性能优化：只检查核心矛盾对
+        core_contradictions = {
+            "情感特征": [("乐观", "悲观"), ("积极", "消极"), ("开朗", "内向")],
+            "兴趣偏好": [("喜欢", "反感"), ("爱好", "讨厌")],
+            "互动习惯": [("主动", "被动"), ("详细", "简短")],
+            "价值观": [("自由", "稳定"), ("个人", "集体")]
+        }
+        
+        dimension_key = "情感特征" if "情感" in dimension else "兴趣偏好" if "兴趣" in dimension else "互动习惯" if "互动" in dimension else "价值观" if "价值" in dimension else dimension
+        pairs = core_contradictions.get(dimension_key, [])
+        
+        new_name = new_tag.name.lower()
+        
+        for existing_tag in existing_tags:
+            existing_name = existing_tag["tag_name"].lower()
+            
+            # 🚀 性能优化：简化匹配逻辑
+            for pair in pairs:
+                word1, word2 = pair[0].lower(), pair[1].lower()
+                if (word1 in existing_name and word2 in new_name) or (word2 in existing_name and word1 in new_name):
+                    if new_tag.confidence > existing_tag.get("avg_confidence", 0) + 0.15:
+                        return ConflictResolution(
+                            action='replace',
+                            resolved_tags=[new_tag],
+                            conflict_type='contradictory',
+                            explanation=f'矛盾替换: "{existing_tag["tag_name"]}" → "{new_tag.name}"'
+                        )
+        return None
     
     def _check_contradictory(self, dimension: str, existing_tags: List[Dict], new_tag: TagInfo) -> Optional[ConflictResolution]:
         """检查矛盾标签"""
@@ -189,11 +235,37 @@ class TagManager:
         self.tags_file = f"{self.user_data_path}/user_tags.json"
         self.timeline_file = f"{self.user_data_path}/tag_timeline.json"
         
-        # 🆕 初始化冲突处理器
+        # 🚀 加载性能配置
+        self.performance_config = self._load_performance_config()
+        
+        # 🆕 初始化冲突处理器（传递性能配置）
         self.conflict_resolver = TagConflictResolver()
+        self.conflict_resolver.max_tags_for_temporal_check = self.performance_config.get('max_tags_for_temporal_check', 10)
         
         # 确保文件存在
         self._ensure_tag_files()
+    
+    def _load_performance_config(self) -> Dict:
+        """加载性能配置"""
+        try:
+            with open("config.yaml", 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
+                return config.get('tag_system', {}).get('performance', {
+                    'enable_debug_logs': False,
+                    'enable_conflict_detection': True,
+                    'conflict_detection_mode': 'fast',
+                    'max_tags_for_temporal_check': 10,
+                    'cache_conflict_results': True
+                })
+        except Exception as e:
+            print(f"警告: 无法加载性能配置，使用默认设置: {e}")
+            return {
+                'enable_debug_logs': False,
+                'enable_conflict_detection': True,
+                'conflict_detection_mode': 'fast',
+                'max_tags_for_temporal_check': 10,
+                'cache_conflict_results': True
+            }
         
     def _ensure_tag_files(self):
         """确保标签文件存在"""
@@ -303,12 +375,23 @@ class TagManager:
         active_tags = dimension_data["active_tags"]
         dimension_name = dimension_data.get("dimension_name", "")
         
-        # 🆕 第一步：冲突检测和处理
-        print(f"🔍 [调试] 检测冲突 - 维度: {dimension_name}, 现有标签: {len(active_tags)}, 新标签: {[tag.name for tag in new_tags]}")
-        resolutions = self.conflict_resolver.resolve_conflicts(
-            dimension_name, active_tags, new_tags
-        )
-        print(f"🎯 [调试] 冲突检测结果: {len(resolutions)} 个冲突")
+        # 🆕 第一步：冲突检测和处理（配置驱动的优化版）
+        debug_mode = self.performance_config.get('enable_debug_logs', False)
+        enable_conflict_detection = self.performance_config.get('enable_conflict_detection', True)
+        
+        if debug_mode:
+            print(f"🔍 [调试] 检测冲突 - 维度: {dimension_name}, 现有标签: {len(active_tags)}, 新标签: {[tag.name for tag in new_tags]}")
+        
+        # 🚀 性能优化：根据配置决定是否进行冲突检测
+        if not enable_conflict_detection or len(active_tags) == 0 or len(new_tags) == 0:
+            resolutions = []
+        else:
+            resolutions = self.conflict_resolver.resolve_conflicts(
+                dimension_name, active_tags, new_tags
+            )
+        
+        if debug_mode:
+            print(f"🎯 [调试] 冲突检测结果: {len(resolutions)} 个冲突")
         
         # 🆕 第二步：应用冲突解决方案
         if resolutions:
@@ -326,9 +409,10 @@ class TagManager:
             if len(dimension_data["conflict_history"]) > 50:
                 dimension_data["conflict_history"] = dimension_data["conflict_history"][-50:]
             
-            # 打印冲突处理日志
-            for resolution in resolutions:
-                print(f"[冲突处理] {dimension_name}: {resolution.explanation}")
+            # 🚀 性能优化：只在debug模式下打印冲突处理日志
+            if debug_mode:
+                for resolution in resolutions:
+                    print(f"[冲突处理] {dimension_name}: {resolution.explanation}")
         
         # 🆕 第三步：处理未发生冲突的新标签
         processed_tag_names = set()

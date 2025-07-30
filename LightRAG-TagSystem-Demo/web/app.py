@@ -82,10 +82,13 @@ def chat():
         # 生成回应
         response_data = response_generator.generate_response(user_message)
         
+        # 🔧 修复：获取标准化的用户画像数据（与/api/profile接口保持一致）
+        user_profile = _get_standardized_user_profile(str(user_id))
+        
         return jsonify({
             "success": True,
             "response": response_data["response"],
-            "user_profile": response_data["user_profile_snapshot"],
+            "user_profile": user_profile,
             "extracted_tags": {k: [{"name": tag.name, "confidence": tag.confidence} for tag in v] for k, v in extracted_tags.items()}
         })
         
@@ -94,6 +97,58 @@ def chat():
             "success": False,
             "error": str(e)
         }), 500
+
+def _get_standardized_user_profile(user_id: str):
+    """获取标准化的用户画像数据，与/api/profile接口保持一致"""
+    try:
+        tag_manager = TagManager(user_id)
+        user_tags = tag_manager.get_user_tags()
+        
+        dimensions = user_tags.get('tag_dimensions', {})
+        active_dimensions = []
+        
+        # 处理所有维度数据，确保与前端期望的数据结构匹配
+        for key, dimension in dimensions.items():
+            tags = []
+            
+            # 优先使用active_tags，如果不存在再使用tags
+            if dimension.get('active_tags') and len(dimension['active_tags']) > 0:
+                for tag in dimension['active_tags']:
+                    tags.append({
+                        'name': tag.get('tag_name', ''),
+                        'confidence': tag.get('avg_confidence', tag.get('confidence', 0)),
+                        'weight': tag.get('current_weight', tag.get('weight', 0))
+                    })
+            elif dimension.get('tags') and len(dimension['tags']) > 0:
+                for tag_name, tag_info in dimension['tags'].items():
+                    tags.append({
+                        'name': tag_name,
+                        'confidence': tag_info.get('confidence', 0),
+                        'weight': tag_info.get('weight', 0)
+                    })
+            
+            # 总是添加维度，即使没有标签
+            active_dimensions.append({
+                'name': dimension.get('name', dimension.get('dimension_name', key)),
+                'dimension': key,  # 🔧 关键修复：添加dimension字段为英文key
+                'tags': tags
+            })
+        
+        return {
+            'active_dimensions': active_dimensions,
+            'emotional_health_index': user_tags.get('emotional_health_index', 
+                                                   user_tags.get('computed_metrics', {}).get('emotional_health_index', 0.5)),
+            'profile_maturity': user_tags.get('profile_maturity',
+                                            user_tags.get('computed_metrics', {}).get('overall_profile_maturity', 0.0))
+        }
+        
+    except Exception as e:
+        print(f"获取标准化用户画像时出错: {e}")
+        return {
+            'active_dimensions': [],
+            'emotional_health_index': 0.5,
+            'profile_maturity': 0.0
+        }
 
 @app.route('/api/profile')
 @login_required

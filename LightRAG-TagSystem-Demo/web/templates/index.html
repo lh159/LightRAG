@@ -793,19 +793,40 @@
         async function handleFile(file) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                document.getElementById('conversationText').value = e.target.result;
+                const content = e.target.result;
+                document.getElementById('conversationText').value = content;
                 document.getElementById('progressInfo').textContent = `已加载文件：${file.name}`;
+                
+                // 调试信息
+                console.log('文件已加载:', file.name);
+                console.log('文件内容长度:', content.length);
+                console.log('文件内容前100字符:', content.substring(0, 100));
+                
+                // 验证文本框是否真的被填充了
+                const textareaValue = document.getElementById('conversationText').value;
+                console.log('文本框内容长度:', textareaValue.length);
+                console.log('文本框内容前100字符:', textareaValue.substring(0, 100));
             };
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8');
         }
         
         // 处理对话文本并提取标签
         async function processConversation() {
             const text = document.getElementById('conversationText').value.trim();
+            
+            // 调试信息
+            console.log('开始处理对话文本');
+            console.log('文本框原始值长度:', document.getElementById('conversationText').value.length);
+            console.log('去除空白后文本长度:', text.length);
+            console.log('文本内容前200字符:', text.substring(0, 200));
+            
             if (!text) {
+                console.log('文本为空，显示警告');
                 alert('请先输入或上传对话文本！');
                 return;
             }
+            
+            console.log('文本验证通过，开始处理');
             
             // 显示处理中状态
             const overlay = document.getElementById('processingOverlay');

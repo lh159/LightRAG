@@ -502,6 +502,252 @@
             font-size: 12px;
             color: #6c757d;
         }
+        
+        /* 标签溯源相关样式 */
+        .tag-trace-modal .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .tag-overview {
+            background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .tag-overview .tag-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 10px;
+        }
+        
+        .tag-overview .tag-category {
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .tag-overview .tag-confidence {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .chart-container {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .evidence-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .evidence-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .evidence-item.high-weight {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .evidence-item.medium-weight {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .evidence-item.low-weight {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+        
+        .evidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .evidence-text {
+            color: #495057;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        
+        .evidence-contribution {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .history-timeline {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-entry {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+            position: relative;
+        }
+        
+        .history-entry.create {
+            border-left-color: #28a745;
+        }
+        
+        .history-entry.strengthen {
+            border-left-color: #17a2b8;
+        }
+        
+        .history-entry.weaken {
+            border-left-color: #ffc107;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .history-action {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .history-confidence {
+            font-size: 14px;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        
+        .history-evidence {
+            font-size: 13px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .profile-tag {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            margin: 2px;
+        }
+        
+        .profile-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .profile-tag.clickable::after {
+            content: "🔍";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .profile-tag.clickable:hover::after {
+            opacity: 1;
+        }
+        
+        .trigger-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .tag-trigger-notification {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .triggered-tag {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .triggered-tag:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+        
+        .triggered-tag.new {
+            background: #28a745;
+        }
+        
+        .triggered-tag.strengthen {
+            background: #17a2b8;
+        }
+        
+        .triggered-tag.weaken {
+            background: #ffc107;
+            color: #212529;
+        }
     </style>
 </head>
 <body>
@@ -535,6 +781,12 @@
             
             <div id="profileContent">
                 <p style="color: #666; text-align: center;">开始对话后，这里会显示你的个性化标签</p>
+            </div>
+            
+            <!-- 标签溯源按钮 -->
+            <div class="profile-actions" style="margin-top: 15px; text-align: center; display: none;" id="profileActions">
+                <button class="btn-secondary" onclick="showTagStatistics()">📊 标签统计</button>
+                <button class="btn-secondary" onclick="showRecentTriggers()">🔍 最近触发</button>
             </div>
             
             <div id="metricsSection" style="display: none;">
@@ -610,6 +862,92 @@
         </div>
     </div>
 
+    <!-- 标签溯源模态窗口 -->
+    <div id="tagTraceModal" class="modal" style="display: none;">
+        <div class="modal-content tag-trace-modal">
+            <div class="modal-header">
+                <h3 id="tagTraceTitle">🔍 标签溯源</h3>
+                <button class="close-btn" onclick="closeTagTrace()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- 标签基本信息 -->
+                <div class="tag-overview" id="tagOverview">
+                    <!-- 动态填充 -->
+                </div>
+                
+                <!-- 置信度变化图表 -->
+                <div class="confidence-chart" id="confidenceChart" style="display: none;">
+                    <h4>📈 置信度变化趋势</h4>
+                    <div class="chart-container">
+                        <canvas id="confidenceCanvas" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 证据链 -->
+                <div class="evidence-chain" id="evidenceChain" style="display: none;">
+                    <h4>📝 支持证据</h4>
+                    <div class="evidence-list" id="evidenceList">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+                
+                <!-- 历史记录 -->
+                <div class="tag-history" id="tagHistorySection" style="display: none;">
+                    <h4>📚 变化历史</h4>
+                    <div class="history-timeline" id="historyTimeline">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="exportTagReport()">📄 导出报告</button>
+                <button class="btn-primary" onclick="closeTagTrace()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签统计模态窗口 -->
+    <div id="tagStatsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 标签统计总览</h3>
+                <button class="close-btn" onclick="closeTagStats()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="tagStatsContent">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeTagStats()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近触发模态窗口 -->
+    <div id="recentTriggersModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 最近标签触发</h3>
+                <button class="close-btn" onclick="closeRecentTriggers()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="recentTriggersContent">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeRecentTriggers()">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         async function sendMessage() {
             const input = document.getElementById('messageInput');
@@ -674,7 +1012,7 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
         
-        function updateProfile(userProfile) {
+        function updateProfile_old(userProfile) {
             const profileContent = document.getElementById('profileContent');
             const metricsSection = document.getElementById('metricsSection');
             
@@ -1003,6 +1341,512 @@
                 
             } catch (error) {
                 console.error('Failed to load initial data:', error);
+            }
+        }
+        
+        // ============= 标签溯源功能 =============
+        
+        // 显示标签溯源信息
+        async function showTagTrace(tagName) {
+            try {
+                const response = await fetch(`/api/tag_trace/${encodeURIComponent(tagName)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTagTraceModal(data.trace_info);
+                } else {
+                    alert('获取标签溯源信息失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取标签溯源信息错误:', error);
+                alert('获取标签溯源信息失败: ' + error.message);
+            }
+        }
+        
+        // 显示标签溯源模态窗口
+        function displayTagTraceModal(traceInfo) {
+            const modal = document.getElementById('tagTraceModal');
+            const title = document.getElementById('tagTraceTitle');
+            const overview = document.getElementById('tagOverview');
+            const evidenceChain = document.getElementById('evidenceChain');
+            const evidenceList = document.getElementById('evidenceList');
+            const historySection = document.getElementById('tagHistorySection');
+            const historyTimeline = document.getElementById('historyTimeline');
+            const confidenceChart = document.getElementById('confidenceChart');
+            
+            // 设置标题
+            title.textContent = `🔍 标签溯源：${traceInfo.tag_name}`;
+            
+            // 显示基本信息
+            const stats = traceInfo.statistics || {};
+            const currentConfidence = stats.current_confidence || 0;
+            const creationTime = stats.creation_time || null;
+            const totalTriggers = stats.total_triggers || 0;
+            const positiveTriggers = stats.positive_triggers || 0;
+            const negativeTriggers = stats.negative_triggers || 0;
+            const evidenceCount = stats.evidence_count || 0;
+            
+            overview.innerHTML = `
+                <div class="tag-info">
+                    <span class="tag-name">${traceInfo.tag_name}</span>
+                    <span class="tag-category">${getCategoryDisplayName('unknown')}</span>
+                    <span class="tag-confidence">置信度: ${(currentConfidence * 100).toFixed(1)}%</span>
+                </div>
+                <div style="margin-top: 10px; font-size: 14px; color: #6c757d;">
+                    <div>创建时间: ${creationTime ? new Date(creationTime).toLocaleString() : '暂无记录'}</div>
+                    <div>总触发次数: ${totalTriggers} | 正向: ${positiveTriggers} | 负向: ${negativeTriggers}</div>
+                    <div>证据数量: ${evidenceCount}</div>
+                </div>
+                ${(traceInfo.history.length === 0 && traceInfo.evidence_chain.length === 0) ? 
+                    '<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; color: #856404;"><strong>📝 提示：</strong>此标签暂无溯源记录，可能是在溯源系统启用前创建的。继续对话以生成新的溯源信息。</div>' : 
+                    ''
+                }
+            `;
+            
+            // 显示证据链
+            if (traceInfo.evidence_chain && traceInfo.evidence_chain.length > 0) {
+                evidenceChain.style.display = 'block';
+                evidenceList.innerHTML = '';
+                
+                traceInfo.evidence_chain.forEach(evidence => {
+                    const evidenceDiv = document.createElement('div');
+                    evidenceDiv.className = `evidence-item ${getEvidenceWeightClass(evidence.weight)}`;
+                    evidenceDiv.innerHTML = `
+                        <div class="evidence-header">
+                            <span class="evidence-time">${new Date(evidence.timestamp).toLocaleString()}</span>
+                            <span class="evidence-weight">权重: ${evidence.weight.toFixed(2)}</span>
+                        </div>
+                        <div class="evidence-text">${evidence.text}</div>
+                        <div class="evidence-contribution">
+                            对置信度贡献: ${evidence.confidence_contribution > 0 ? '+' : ''}${(evidence.confidence_contribution * 100).toFixed(1)}%
+                        </div>
+                    `;
+                    evidenceList.appendChild(evidenceDiv);
+                });
+            } else {
+                evidenceChain.style.display = 'block';
+                evidenceList.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px; font-style: italic;">📝 暂无证据记录</div>';
+            }
+            
+            // 显示历史记录
+            if (traceInfo.history && traceInfo.history.length > 0) {
+                historySection.style.display = 'block';
+                historyTimeline.innerHTML = '';
+                
+                traceInfo.history.forEach(entry => {
+                    const historyDiv = document.createElement('div');
+                    historyDiv.className = `history-entry ${entry.action}`;
+                    historyDiv.innerHTML = `
+                        <div class="history-time">${new Date(entry.timestamp).toLocaleString()}</div>
+                        <div class="history-action">${getActionDescription(entry.action)}</div>
+                        <div class="history-confidence">置信度: ${(entry.confidence * 100).toFixed(1)}%</div>
+                        <div class="history-evidence">${entry.evidence}</div>
+                    `;
+                    historyTimeline.appendChild(historyDiv);
+                });
+            } else {
+                historySection.style.display = 'block';
+                historyTimeline.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px; font-style: italic;">📈 暂无历史记录</div>';
+            }
+            
+            // 显示置信度图表
+            if (traceInfo.confidence_timeline && traceInfo.confidence_timeline.length > 1) {
+                confidenceChart.style.display = 'block';
+                drawConfidenceChart(traceInfo.confidence_timeline);
+            } else {
+                confidenceChart.style.display = 'block';
+                const canvas = document.getElementById('confidenceCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('📊 暂无置信度变化数据', canvas.width / 2, canvas.height / 2);
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // 绘制置信度变化图表
+        function drawConfidenceChart(timeline) {
+            const canvas = document.getElementById('confidenceCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (timeline.length < 2) return;
+            
+            const padding = 40;
+            const width = canvas.width - 2 * padding;
+            const height = canvas.height - 2 * padding;
+            
+            // 找到最大值和最小值
+            const maxValue = Math.max(...timeline.map(t => t.confidence));
+            const minValue = Math.min(...timeline.map(t => t.confidence));
+            const range = maxValue - minValue || 1;
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#dee2e6';
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + height);
+            ctx.lineTo(padding + width, padding + height);
+            ctx.stroke();
+            
+            // 绘制数据线
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            timeline.forEach((point, index) => {
+                const x = padding + (index / (timeline.length - 1)) * width;
+                const y = padding + height - ((point.confidence - minValue) / range) * height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制数据点
+            ctx.fillStyle = '#007bff';
+            timeline.forEach((point, index) => {
+                const x = padding + (index / (timeline.length - 1)) * width;
+                const y = padding + height - ((point.confidence - minValue) / range) * height;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 添加标签
+            ctx.fillStyle = '#6c757d';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // Y轴标签
+            ctx.textAlign = 'right';
+            ctx.fillText((maxValue * 100).toFixed(0) + '%', padding - 10, padding + 5);
+            ctx.fillText((minValue * 100).toFixed(0) + '%', padding - 10, padding + height + 5);
+        }
+        
+        // 显示标签统计
+        async function showTagStatistics() {
+            try {
+                const response = await fetch('/api/tag_statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTagStatsModal(data);
+                } else {
+                    alert('获取标签统计失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取标签统计错误:', error);
+                alert('获取标签统计失败');
+            }
+        }
+        
+        // 显示标签统计模态窗口
+        function displayTagStatsModal(data) {
+            const modal = document.getElementById('tagStatsModal');
+            const content = document.getElementById('tagStatsContent');
+            
+            let html = `
+                <div class="stats-overview">
+                    <h4>📊 总览</h4>
+                    <p>总标签数: ${data.total_tags} | 类别数: ${data.total_categories}</p>
+                </div>
+            `;
+            
+            // 按类别显示标签统计
+            Object.entries(data.tag_statistics).forEach(([category, tags]) => {
+                html += `
+                    <div class="category-stats">
+                        <h4>${getCategoryDisplayName(category)}</h4>
+                        <div class="tags-stats-grid">
+                `;
+                
+                tags.forEach(tag => {
+                    html += `
+                        <div class="tag-stat-item" onclick="showTagTrace('${tag.tag_name}')">
+                            <div class="tag-stat-name">${tag.tag_name}</div>
+                            <div class="tag-stat-confidence">${(tag.current_confidence * 100).toFixed(1)}%</div>
+                            <div class="tag-stat-triggers">触发: ${tag.total_triggers}次</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 显示最近触发
+            if (data.recent_triggers && data.recent_triggers.length > 0) {
+                html += `
+                    <div class="recent-triggers">
+                        <h4>🔍 最近触发</h4>
+                        <div class="triggers-list">
+                `;
+                
+                data.recent_triggers.slice(0, 5).forEach(trigger => {
+                    html += `
+                        <div class="trigger-item">
+                            <span class="trigger-tag ${trigger.action_type}">${trigger.tag_name}</span>
+                            <span class="trigger-action">${getActionDescription(trigger.action_type)}</span>
+                            <span class="trigger-time">${new Date(trigger.trigger_time).toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+            modal.style.display = 'block';
+        }
+        
+        // 显示最近触发
+        async function showRecentTriggers() {
+            try {
+                const response = await fetch('/api/tag_statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayRecentTriggersModal(data.recent_triggers);
+                } else {
+                    alert('获取最近触发失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取最近触发错误:', error);
+                alert('获取最近触发失败');
+            }
+        }
+        
+        // 显示最近触发模态窗口
+        function displayRecentTriggersModal(triggers) {
+            const modal = document.getElementById('recentTriggersModal');
+            const content = document.getElementById('recentTriggersContent');
+            
+            if (!triggers || triggers.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无触发记录</p>';
+            } else {
+                let html = '<div class="triggers-timeline">';
+                
+                triggers.forEach(trigger => {
+                    html += `
+                        <div class="trigger-timeline-item ${trigger.action_type}">
+                            <div class="trigger-header">
+                                <span class="trigger-tag-name">${trigger.tag_name}</span>
+                                <span class="trigger-time">${new Date(trigger.trigger_time).toLocaleString()}</span>
+                            </div>
+                            <div class="trigger-action">${getActionDescription(trigger.action_type)}</div>
+                            <div class="trigger-confidence-change">
+                                置信度: ${(trigger.confidence_before * 100).toFixed(1)}% → ${(trigger.confidence_after * 100).toFixed(1)}%
+                                (${trigger.confidence_delta > 0 ? '+' : ''}${(trigger.confidence_delta * 100).toFixed(1)}%)
+                            </div>
+                            <div class="trigger-evidence">${trigger.evidence}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                content.innerHTML = html;
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // 导出标签报告
+        async function exportTagReport() {
+            const tagName = document.getElementById('tagTraceTitle').textContent.replace('🔍 标签溯源：', '');
+            
+            try {
+                const response = await fetch(`/api/export_tag_report/${encodeURIComponent(tagName)}?format=markdown`);
+                const report = await response.text();
+                
+                // 创建下载链接
+                const blob = new Blob([report], { type: 'text/markdown' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${tagName}_溯源报告.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('导出报告错误:', error);
+                alert('导出报告失败');
+            }
+        }
+        
+        // 关闭模态窗口的函数
+        function closeTagTrace() {
+            document.getElementById('tagTraceModal').style.display = 'none';
+        }
+        
+        function closeTagStats() {
+            document.getElementById('tagStatsModal').style.display = 'none';
+        }
+        
+        function closeRecentTriggers() {
+            document.getElementById('recentTriggersModal').style.display = 'none';
+        }
+        
+        // 辅助函数
+        function getCategoryDisplayName(category) {
+            const categoryNames = {
+                'emotional_traits': '情感特征',
+                'interest_preferences': '兴趣偏好',
+                'interaction_habits': '互动习惯',
+                'value_principles': '价值观'
+            };
+            return categoryNames[category] || category;
+        }
+        
+        function getActionDescription(action) {
+            const actionDescriptions = {
+                'create': '新建标签',
+                'strengthen': '强化标签',
+                'weaken': '弱化标签',
+                'update': '更新标签'
+            };
+            return actionDescriptions[action] || action;
+        }
+        
+        function getEvidenceWeightClass(weight) {
+            if (weight >= 0.7) return 'high-weight';
+            if (weight >= 0.4) return 'medium-weight';
+            return 'low-weight';
+        }
+        
+        // 修改用户画像显示函数，添加点击事件，支持多种数据格式
+        function updateProfile(profile) {
+            const profileContent = document.getElementById('profileContent');
+            const metricsSection = document.getElementById('metricsSection');
+            const profileActions = document.getElementById('profileActions');
+            
+            if (!profile || Object.keys(profile).length === 0) {
+                profileContent.innerHTML = '<p style="color: #666; text-align: center;">还没有生成用户画像，继续对话来建立你的个性化标签</p>';
+                metricsSection.style.display = 'none';
+                profileActions.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            let hasAnyTags = false;
+            
+            // 定义所有维度的基础框架
+            const allDimensions = [
+                { key: 'emotional_traits', name: '情感特征维度' },
+                { key: 'interest_preferences', name: '兴趣偏好维度' },
+                { key: 'interaction_habits', name: '互动习惯维度' },
+                { key: 'value_principles', name: '价值观维度' }
+            ];
+            
+            // 检查是否是旧格式（包含active_dimensions）
+            if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
+                // 处理旧格式
+                allDimensions.forEach(dimensionDef => {
+                    let currentDimension = profile.active_dimensions.find(d => 
+                        d.dimension === dimensionDef.key || 
+                        d.name === dimensionDef.name ||
+                        (d.name && d.name.includes(dimensionDef.name.substring(0, 4)))
+                    );
+                    
+                    html += `<div class="profile-dimension">`;
+                    html += `<h3 class="dimension-title">${dimensionDef.name}</h3>`;
+                    html += `<div class="profile-tags">`;
+                    
+                    if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
+                        hasAnyTags = true;
+                        currentDimension.tags.forEach(tag => {
+                            const tagName = tag.name || tag.tag_name || tag;
+                            const confidence = tag.confidence || tag.avg_confidence || 0;
+                            html += `<span class="profile-tag clickable" onclick="showTagTrace('${tagName}')" title="点击查看标签溯源">
+                                ${tagName} (${(confidence * 100).toFixed(0)}%)
+                            </span>`;
+                        });
+                    } else {
+                        html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                    }
+                    
+                    html += `</div></div>`;
+                });
+            } else {
+                // 处理新格式（直接的维度-标签映射）
+                allDimensions.forEach(dimensionDef => {
+                    const tags = profile[dimensionDef.key];
+                    
+                    html += `<div class="profile-dimension">`;
+                    html += `<h3 class="dimension-title">${dimensionDef.name}</h3>`;
+                    html += `<div class="profile-tags">`;
+                    
+                    if (Array.isArray(tags) && tags.length > 0) {
+                        hasAnyTags = true;
+                        tags.forEach(tag => {
+                            if (tag && typeof tag === 'object' && tag.name) {
+                                html += `<span class="profile-tag clickable" onclick="showTagTrace('${tag.name}')" title="点击查看标签溯源">
+                                    ${tag.name} (${Math.round(tag.confidence * 100)}%)
+                                </span>`;
+                            }
+                        });
+                    } else {
+                        html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                    }
+                    
+                    html += `</div></div>`;
+                });
+            }
+            
+            profileContent.innerHTML = html;
+            
+            // 显示或隐藏操作按钮
+            if (hasAnyTags) {
+                profileActions.style.display = 'block';
+            } else {
+                profileActions.style.display = 'none';
+            }
+            
+            // 处理综合指标
+            if (profile.computed_metrics) {
+                const metrics = profile.computed_metrics;
+                const metricsGrid = document.getElementById('metricsGrid');
+                
+                let metricsHtml = '';
+                Object.entries(metrics).forEach(([key, value]) => {
+                    const displayName = getMetricDisplayName(key);
+                    const displayValue = typeof value === 'number' ? 
+                        (value > 1 ? value.toFixed(0) : (value * 100).toFixed(0) + '%') : 
+                        value;
+                    
+                    metricsHtml += `
+                        <div class="metric-item">
+                            <div class="metric-value">${displayValue}</div>
+                            <div class="metric-label">${displayName}</div>
+                        </div>
+                    `;
+                });
+                
+                if (metricsHtml) {
+                    metricsGrid.innerHTML = metricsHtml;
+                    metricsSection.style.display = 'block';
+                } else {
+                    metricsSection.style.display = 'none';
+                }
+            } else {
+                metricsSection.style.display = 'none';
             }
         }
     </script>

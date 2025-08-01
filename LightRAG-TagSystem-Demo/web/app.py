@@ -7,11 +7,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 import uuid
 import json
+import time
 from datetime import datetime
 from app.core.lightrag_engine import LightRAGEngine
-from app.core.tag_extractor import TagExtractor  
+from app.core.tag_extractor import TagExtractor
 from app.core.tag_manager import TagManager
 from app.core.response_generator import ResponseGenerator
+from app.core.enhanced_tag_extractor import EnhancedTagExtractor
+from app.core.tag_tracer import TagTracer
+from app.core.tag_trigger_detector import TagTriggerDetector
 from app.utils.database import DatabaseManager
 from app.auth.auth_manager import AuthManager
 from app.auth.decorators import login_required
@@ -69,12 +73,17 @@ def chat():
         user_id = request.current_user["user_id"]
         
         # 初始化组件
-        tag_extractor = TagExtractor(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
         tag_manager = TagManager(str(user_id))
         response_generator = ResponseGenerator(str(user_id))
         
-        # 提取标签
-        extracted_tags = tag_extractor.extract_tags_from_text(user_message)
+        # 提取标签并记录溯源信息
+        extracted_tags, triggers = enhanced_extractor.extract_tags_with_tracing(
+            text=user_message,
+            context={"source": "chat"},
+            session_id=f"chat_{user_id}_{int(time.time())}",
+            message_id=str(uuid.uuid4())
+        )
         
         # 更新标签
         updated_tags = tag_manager.update_tags(extracted_tags)
@@ -538,6 +547,307 @@ def reset_user():
             "success": False,
             "error": str(e)
         }), 500
+
+
+# ============= 标签溯源功能API =============
+
+@app.route('/api/analyze_message_triggers', methods=['POST'])
+@login_required
+def analyze_message_triggers():
+    """分析单条消息的标签触发情况"""
+    try:
+        data = request.json
+        message_text = data.get('message_text', '')
+        session_id = data.get('session_id', str(uuid.uuid4()))
+        message_id = data.get('message_id', str(uuid.uuid4()))
+        user_id = request.current_user["user_id"]
+        
+        if not message_text.strip():
+            return jsonify({
+                "success": False,
+                "error": "消息文本不能为空"
+            }), 400
+        
+        # 使用增强版标签提取器
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        
+        # 提取标签并获取触发信息
+        new_tags, triggers = enhanced_extractor.extract_tags_with_tracing(
+            text=message_text,
+            context={"source": "single_message"},
+            session_id=session_id,
+            message_id=message_id
+        )
+        
+        # 更新标签管理器
+        tag_manager = TagManager(str(user_id))
+        tag_manager.update_tags(new_tags)
+        
+        # 分析文本影响
+        impact_analysis = enhanced_extractor.analyze_text_impact(message_text)
+        
+        return jsonify({
+            "success": True,
+            "triggers": [trigger.to_dict() for trigger in triggers],
+            "new_tags": serialize_tags(new_tags),
+            "impact_analysis": impact_analysis,
+            "session_id": session_id,
+            "message_id": message_id
+        })
+        
+    except Exception as e:
+        print(f"分析消息触发错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/tag_trace/<tag_name>', methods=['GET'])
+@login_required
+def get_tag_trace(tag_name):
+    """获取标签的完整溯源信息"""
+    try:
+        user_id = request.current_user["user_id"]
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        
+        # 获取标签溯源信息
+        trace_info = enhanced_extractor.get_tag_trace_info(tag_name)
+        
+        return jsonify({
+            "success": True,
+            "trace_info": trace_info
+        })
+        
+    except Exception as e:
+        print(f"获取标签溯源信息错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/session_tag_summary/<session_id>', methods=['GET'])
+@login_required
+def get_session_tag_summary(session_id):
+    """获取会话的标签变化总结"""
+    try:
+        user_id = request.current_user["user_id"]
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        
+        # 获取会话标签总结
+        summary = enhanced_extractor.get_conversation_tag_summary(session_id)
+        
+        return jsonify({
+            "success": True,
+            "summary": summary
+        })
+        
+    except Exception as e:
+        print(f"获取会话标签总结错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/tag_statistics', methods=['GET'])
+@login_required
+def get_tag_statistics():
+    """获取用户的标签统计信息"""
+    try:
+        user_id = request.current_user["user_id"]
+        tag_tracer = TagTracer(str(user_id))
+        tag_manager = TagManager(str(user_id))
+        
+        # 获取所有标签
+        all_tags_raw = tag_manager.get_user_tags()
+        
+        # 转换为简单格式
+        all_tags = {}
+        if isinstance(all_tags_raw, dict) and "tag_dimensions" in all_tags_raw:
+            for dimension, dimension_data in all_tags_raw["tag_dimensions"].items():
+                active_tags = dimension_data.get("active_tags", [])
+                all_tags[dimension] = active_tags
+        else:
+            all_tags = all_tags_raw
+        
+        # 获取每个标签的统计信息
+        tag_stats = {}
+        for category, tag_list in all_tags.items():
+            if not isinstance(tag_list, list):
+                continue
+                
+            category_stats = []
+            for tag in tag_list:
+                # 获取标签名称
+                tag_name = tag.get('name') if isinstance(tag, dict) else (tag.name if hasattr(tag, 'name') else str(tag))
+                
+                if tag_name:
+                    stats = tag_tracer.get_tag_statistics(tag_name)
+                    if stats:
+                        category_stats.append(stats)
+            
+            if category_stats:
+                tag_stats[category] = category_stats
+        
+        # 获取最近的触发记录
+        recent_triggers = tag_tracer.get_trigger_records()[:20]  # 最近20条
+        
+        return jsonify({
+            "success": True,
+            "tag_statistics": tag_stats,
+            "recent_triggers": [trigger.to_dict() for trigger in recent_triggers],
+            "total_tags": sum(len(tags) for tags in all_tags.values()),
+            "total_categories": len(all_tags)
+        })
+        
+    except Exception as e:
+        print(f"获取标签统计信息错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/export_tag_report/<tag_name>', methods=['GET'])
+@login_required
+def export_tag_report(tag_name):
+    """导出标签溯源报告"""
+    try:
+        user_id = request.current_user["user_id"]
+        format_type = request.args.get('format', 'json')
+        
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        
+        # 导出报告
+        report = enhanced_extractor.export_tag_trace_report(tag_name, format_type)
+        
+        if format_type == 'markdown':
+            return report, 200, {'Content-Type': 'text/markdown; charset=utf-8'}
+        else:
+            return jsonify({
+                "success": True,
+                "report": report,
+                "format": format_type
+            })
+        
+    except Exception as e:
+        print(f"导出标签报告错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+@app.route('/api/predict_tag_impact', methods=['POST'])
+@login_required
+def predict_tag_impact():
+    """预测文本对标签的影响"""
+    try:
+        data = request.json
+        text = data.get('text', '')
+        user_id = request.current_user["user_id"]
+        
+        if not text.strip():
+            return jsonify({
+                "success": False,
+                "error": "文本不能为空"
+            }), 400
+        
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        
+        # 分析文本影响
+        impact_analysis = enhanced_extractor.analyze_text_impact(text)
+        
+        return jsonify({
+            "success": True,
+            "impact_analysis": impact_analysis
+        })
+        
+    except Exception as e:
+        print(f"预测标签影响错误: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 500
+
+
+# 辅助函数
+def serialize_tags(tags_dict):
+    """序列化标签字典 - 支持多种数据格式"""
+    if not tags_dict:
+        return {}
+    
+    serialized = {}
+    
+    # 检查是否是TagManager返回的完整格式
+    if isinstance(tags_dict, dict) and "tag_dimensions" in tags_dict:
+        # 处理TagManager的完整格式
+        for dimension, dimension_data in tags_dict["tag_dimensions"].items():
+            active_tags = dimension_data.get("active_tags", [])
+            serialized[dimension] = []
+            
+            for tag in active_tags:
+                if isinstance(tag, dict):
+                    # 如果是字典格式
+                    serialized[dimension].append({
+                        'name': tag.get('name', ''),
+                        'confidence': tag.get('confidence', 0.0),
+                        'evidence': tag.get('evidence', ''),
+                        'category': dimension
+                    })
+                elif hasattr(tag, 'name'):
+                    # 如果是TagInfo对象
+                    serialized[dimension].append({
+                        'name': tag.name,
+                        'confidence': tag.confidence,
+                        'evidence': getattr(tag, 'evidence', ''),
+                        'category': getattr(tag, 'category', dimension)
+                    })
+                else:
+                    # 如果是字符串或其他格式，跳过或使用默认值
+                    print(f"警告：未知的标签格式: {type(tag)} - {tag}")
+                    continue
+    else:
+        # 处理简单的Dict[str, List[TagInfo]]格式
+        for category, tag_list in tags_dict.items():
+            if not isinstance(tag_list, list):
+                continue
+                
+            serialized[category] = []
+            for tag in tag_list:
+                if isinstance(tag, dict):
+                    # 如果是字典格式
+                    serialized[category].append({
+                        'name': tag.get('name', ''),
+                        'confidence': tag.get('confidence', 0.0),
+                        'evidence': tag.get('evidence', ''),
+                        'category': category
+                    })
+                elif hasattr(tag, 'name'):
+                    # 如果是TagInfo对象
+                    serialized[category].append({
+                        'name': tag.name,
+                        'confidence': tag.confidence,
+                        'evidence': getattr(tag, 'evidence', ''),
+                        'category': getattr(tag, 'category', category)
+                    })
+                else:
+                    # 如果是字符串，创建基本格式
+                    if isinstance(tag, str):
+                        serialized[category].append({
+                            'name': tag,
+                            'confidence': 0.0,
+                            'evidence': '',
+                            'category': category
+                        })
+                    else:
+                        print(f"警告：未知的标签格式: {type(tag)} - {tag}")
+                        continue
+    
+    return serialized
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)

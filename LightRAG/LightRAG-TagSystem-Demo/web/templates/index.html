@@ -417,6 +417,141 @@
             color: #6c757d;
         }
 
+        /* 标签依据展示样式 */
+        .tag-reference-section {
+            margin-top: 15px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .tag-summary {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+        
+        .expand-tags-btn {
+            background: none;
+            border: none;
+            color: #007bff;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .expand-tags-btn:hover {
+            background: #e3f2fd;
+        }
+        
+        .expand-icon {
+            font-size: 10px;
+            margin-right: 4px;
+        }
+        
+        .tag-details {
+            margin-top: 12px;
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 500px;
+            }
+        }
+        
+        .tag-details-content {
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .tag-details-content .tag-category h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #495057;
+            font-weight: 600;
+        }
+        
+        .tag-details-content .tag-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .tag-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .tag-item.primary-tag {
+            background: #e3f2fd;
+            border-left: 3px solid #2196f3;
+        }
+        
+        .tag-item.emotional-tag {
+            background: #fff3e0;
+            border-left: 3px solid #ff9800;
+        }
+        
+        .tag-item.interest-tag {
+            background: #f3e5f5;
+            border-left: 3px solid #9c27b0;
+        }
+        
+        .tag-item.demographic-tag {
+            background: #e8f5e8;
+            border-left: 3px solid #4caf50;
+        }
+        
+        .tag-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .tag-weight {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        
+        .tag-description {
+            font-size: 10px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .adaptation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .adaptation-item {
+            padding: 4px 8px;
+            background: #e1f5fe;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #0277bd;
+        }
+
         /* 继续原有样式... */
         .profile-title {
             color: #343a40;
@@ -1149,8 +1284,12 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    // 显示助手回应
-                    addMessageToChat('assistant', data.response);
+                    // 调试信息
+                    console.log('API返回的数据:', data);
+                    console.log('used_tags:', data.used_tags);
+                    
+                    // 显示助手回应（包含标签依据）
+                    addMessageToChat('assistant', data.response, data.used_tags);
                     
                     // 更新用户画像
                     updateProfile(data.user_profile);
@@ -1171,7 +1310,7 @@
             }
         }
         
-        function addMessageToChat(sender, message) {
+        function addMessageToChat(sender, message, usedTags = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}-message`;
@@ -1179,11 +1318,158 @@
             if (sender === 'user') {
                 messageDiv.innerHTML = `<strong>你:</strong> ${message}`;
             } else {
-                messageDiv.innerHTML = `<strong>助手:</strong> ${message}`;
+                // 助手消息包含标签依据展示
+                let messageHTML = `<strong>助手:</strong> ${message}`;
+                
+                // 如果有标签依据信息，添加展开功能
+                if (usedTags && hasUsedTags(usedTags)) {
+                    const tagSummary = generateTagSummary(usedTags);
+                    const expandId = 'expand_' + Date.now() + Math.random().toString(36).substr(2, 9);
+                    
+                    messageHTML += `
+                        <div class="tag-reference-section">
+                            <div class="tag-summary">${tagSummary}</div>
+                            <button class="expand-tags-btn" onclick="toggleTagDetails('${expandId}')">
+                                <span class="expand-icon">▼</span> 查看标签依据
+                            </button>
+                            <div id="${expandId}" class="tag-details" style="display: none;">
+                                ${generateTagDetailsHTML(usedTags)}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                messageDiv.innerHTML = messageHTML;
             }
             
             chatMessages.appendChild(messageDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function hasUsedTags(usedTags) {
+            console.log('检查usedTags:', usedTags);
+            if (!usedTags) {
+                console.log('usedTags为空');
+                return false;
+            }
+            const result = (usedTags.primary_tags && usedTags.primary_tags.length > 0) ||
+                   (usedTags.emotional_context && usedTags.emotional_context.length > 0) ||
+                   (usedTags.interest_context && usedTags.interest_context.length > 0) ||
+                   (usedTags.demographic_context && usedTags.demographic_context.length > 0) ||
+                   (usedTags.response_adaptations && usedTags.response_adaptations.length > 0);
+            console.log('hasUsedTags结果:', result);
+            return result;
+        }
+        
+        function generateTagSummary(usedTags) {
+            const totalTags = (usedTags.primary_tags?.length || 0) + 
+                             (usedTags.emotional_context?.length || 0) + 
+                             (usedTags.interest_context?.length || 0) + 
+                             (usedTags.demographic_context?.length || 0);
+            
+            if (totalTags === 0) return '';
+            
+            let summary = `基于 ${totalTags} 个标签生成回应`;
+            
+            // 添加主要标签预览
+            if (usedTags.primary_tags && usedTags.primary_tags.length > 0) {
+                const primaryTag = usedTags.primary_tags[0];
+                summary += ` (主要依据: ${primaryTag.name})`;
+            }
+            
+            return summary;
+        }
+        
+        function generateTagDetailsHTML(usedTags) {
+            let html = '<div class="tag-details-content">';
+            
+            // 主要影响标签
+            if (usedTags.primary_tags && usedTags.primary_tags.length > 0) {
+                html += '<div class="tag-category"><h4>🎯 主要影响标签</h4><div class="tag-list">';
+                usedTags.primary_tags.forEach(tag => {
+                    html += `
+                        <div class="tag-item primary-tag">
+                            <span class="tag-name">${tag.name}</span>
+                            <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                            <div class="tag-description">${tag.influence || tag.category}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+            
+            // 情感上下文标签
+            if (usedTags.emotional_context && usedTags.emotional_context.length > 0) {
+                html += '<div class="tag-category"><h4>😊 情感上下文</h4><div class="tag-list">';
+                usedTags.emotional_context.forEach(tag => {
+                    html += `
+                        <div class="tag-item emotional-tag">
+                            <span class="tag-name">${tag.name}</span>
+                            <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                            <div class="tag-description">${tag.influence || tag.subcategory}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+            
+            // 兴趣上下文标签
+            if (usedTags.interest_context && usedTags.interest_context.length > 0) {
+                html += '<div class="tag-category"><h4>🎨 兴趣相关</h4><div class="tag-list">';
+                usedTags.interest_context.forEach(tag => {
+                    html += `
+                        <div class="tag-item interest-tag">
+                            <span class="tag-name">${tag.name}</span>
+                            <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                            <div class="tag-description">${tag.relevance || tag.subcategory}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+            
+            // 人口统计上下文标签
+            if (usedTags.demographic_context && usedTags.demographic_context.length > 0) {
+                html += '<div class="tag-category"><h4>👤 用户特征</h4><div class="tag-list">';
+                usedTags.demographic_context.forEach(tag => {
+                    html += `
+                        <div class="tag-item demographic-tag">
+                            <span class="tag-name">${tag.name}</span>
+                            <span class="tag-weight">${(tag.weight * 100).toFixed(0)}%</span>
+                            <div class="tag-description">${tag.usage || tag.subcategory}</div>
+                        </div>
+                    `;
+                });
+                html += '</div></div>';
+            }
+            
+            // 回应适应性调整
+            if (usedTags.response_adaptations && usedTags.response_adaptations.length > 0) {
+                html += '<div class="tag-category"><h4>⚙️ 回应调整</h4><div class="adaptation-list">';
+                usedTags.response_adaptations.forEach(adaptation => {
+                    html += `<div class="adaptation-item">${adaptation}</div>`;
+                });
+                html += '</div></div>';
+            }
+            
+            html += '</div>';
+            return html;
+        }
+        
+        function toggleTagDetails(expandId) {
+            const detailsDiv = document.getElementById(expandId);
+            const button = event.target.closest('.expand-tags-btn');
+            const icon = button.querySelector('.expand-icon');
+            
+            if (detailsDiv.style.display === 'none') {
+                detailsDiv.style.display = 'block';
+                icon.textContent = '▲';
+                button.innerHTML = button.innerHTML.replace('查看标签依据', '收起标签依据');
+            } else {
+                detailsDiv.style.display = 'none';
+                icon.textContent = '▼';
+                button.innerHTML = button.innerHTML.replace('收起标签依据', '查看标签依据');
+            }
         }
         
         function updateProfile_old(userProfile) {

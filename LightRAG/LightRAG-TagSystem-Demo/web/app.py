@@ -98,7 +98,8 @@ def chat():
             "success": True,
             "response": response_data["response"],
             "user_profile": user_profile,
-            "extracted_tags": {k: [{"name": tag.name, "confidence": tag.confidence} for tag in v] for k, v in extracted_tags.items()}
+            "extracted_tags": {k: [{"name": tag.name, "confidence": tag.confidence} for tag in v] for k, v in extracted_tags.items()},
+            "used_tags": response_data.get("used_tags", {})  # 新增：返回标签依据信息
         })
         
     except Exception as e:

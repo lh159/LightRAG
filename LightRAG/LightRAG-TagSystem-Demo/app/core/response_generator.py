@@ -49,11 +49,15 @@ class ResponseGenerator:
         # 6. 后处理和安全检查
         final_response = self._post_process_response(response, search_strategy)
         
+        # 7. 提取使用的标签依据
+        used_tags = self._extract_used_tags(user_tags, search_strategy, user_query)
+        
         return {
             "response": final_response,
             "search_strategy": search_strategy,
             "knowledge_used": relevant_knowledge[:200] + "..." if len(relevant_knowledge) > 200 else relevant_knowledge,
-            "user_profile_snapshot": self._get_profile_snapshot(user_tags)
+            "user_profile_snapshot": self._get_profile_snapshot(user_tags),
+            "used_tags": used_tags  # 新增：使用的标签依据
         }
     
     def _generate_search_strategy(self, user_tags: Dict, query: str) -> Dict:
@@ -84,6 +88,182 @@ class ResponseGenerator:
                 strategy["emotional_adaptation"] = "encouraging"
         
         return strategy
+    
+    def _extract_used_tags(self, user_tags: Dict, search_strategy: Dict, user_query: str) -> Dict:
+        """提取生成回应时使用的标签依据"""
+        used_tags = {
+            "primary_tags": [],      # 主要影响标签
+            "secondary_tags": [],    # 次要影响标签
+            "emotional_context": [], # 情感上下文标签
+            "interest_context": [],  # 兴趣上下文标签
+            "demographic_context": [], # 人口统计上下文标签
+            "response_adaptations": [] # 回应适应性调整
+        }
+        
+        dimensions = user_tags.get("tag_dimensions", {})
+        
+        # 处理情感维度标签
+        emotional_dim = dimensions.get("emotional_state", dimensions.get("emotional_traits", {}))
+        if emotional_dim:
+            self._extract_emotional_tags(emotional_dim, used_tags, search_strategy)
+        
+        # 处理兴趣维度标签
+        interest_dim = dimensions.get("interests_hobbies", dimensions.get("interest_preferences", {}))
+        if interest_dim:
+            self._extract_interest_tags(interest_dim, used_tags, user_query)
+        
+        # 处理人口统计标签
+        demo_dim = dimensions.get("demographic_info", {})
+        if demo_dim:
+            self._extract_demographic_tags(demo_dim, used_tags, user_query)
+        
+        # 基于搜索策略添加适应性说明
+        self._add_response_adaptations(search_strategy, used_tags)
+        
+        return used_tags
+    
+    def _extract_emotional_tags(self, emotional_dim: Dict, used_tags: Dict, search_strategy: Dict):
+        """提取情感相关的使用标签"""
+        if emotional_dim.get('subcategories'):
+            # 新的二级标签结构
+            for sub_key, subcategory_data in emotional_dim['subcategories'].items():
+                active_tags = subcategory_data.get("active_tags", [])
+                for tag in active_tags:
+                    if tag.get("current_weight", 0) > 0.3:
+                        tag_info = {
+                            "name": tag["tag_name"],
+                            "weight": tag.get("current_weight", 0),
+                            "category": "情绪与情感状态",
+                            "subcategory": subcategory_data.get("subcategory_name", sub_key),
+                            "influence": self._get_emotional_influence(tag["tag_name"], search_strategy)
+                        }
+                        if tag.get("current_weight", 0) > 0.6:
+                            used_tags["primary_tags"].append(tag_info)
+                        else:
+                            used_tags["emotional_context"].append(tag_info)
+        elif emotional_dim.get("active_tags"):
+            # 兼容旧结构
+            for tag in emotional_dim.get("active_tags", []):
+                if tag.get("current_weight", 0) > 0.3:
+                    tag_info = {
+                        "name": tag["tag_name"],
+                        "weight": tag.get("current_weight", 0),
+                        "category": "情感特征",
+                        "influence": self._get_emotional_influence(tag["tag_name"], search_strategy)
+                    }
+                    if tag.get("current_weight", 0) > 0.6:
+                        used_tags["primary_tags"].append(tag_info)
+                    else:
+                        used_tags["emotional_context"].append(tag_info)
+    
+    def _extract_interest_tags(self, interest_dim: Dict, used_tags: Dict, user_query: str):
+        """提取兴趣相关的使用标签"""
+        if interest_dim.get('subcategories'):
+            # 新的二级标签结构
+            for sub_key, subcategory_data in interest_dim['subcategories'].items():
+                active_tags = subcategory_data.get("active_tags", [])
+                for tag in active_tags:
+                    if tag.get("current_weight", 0) > 0.2 and self._is_relevant_to_query(tag["tag_name"], user_query):
+                        tag_info = {
+                            "name": tag["tag_name"],
+                            "weight": tag.get("current_weight", 0),
+                            "category": "兴趣爱好",
+                            "subcategory": subcategory_data.get("subcategory_name", sub_key),
+                            "relevance": "与用户问题相关"
+                        }
+                        used_tags["interest_context"].append(tag_info)
+        elif interest_dim.get("active_tags"):
+            # 兼容旧结构
+            for tag in interest_dim.get("active_tags", []):
+                if tag.get("current_weight", 0) > 0.2 and self._is_relevant_to_query(tag["tag_name"], user_query):
+                    tag_info = {
+                        "name": tag["tag_name"],
+                        "weight": tag.get("current_weight", 0),
+                        "category": "兴趣偏好",
+                        "relevance": "与用户问题相关"
+                    }
+                    used_tags["interest_context"].append(tag_info)
+    
+    def _extract_demographic_tags(self, demo_dim: Dict, used_tags: Dict, user_query: str):
+        """提取人口统计相关的使用标签"""
+        if demo_dim.get('subcategories'):
+            for sub_key, subcategory_data in demo_dim['subcategories'].items():
+                active_tags = subcategory_data.get("active_tags", [])
+                for tag in active_tags:
+                    if tag.get("current_weight", 0) > 0.4:
+                        tag_info = {
+                            "name": tag["tag_name"],
+                            "weight": tag.get("current_weight", 0),
+                            "category": "基本人口统计学",
+                            "subcategory": subcategory_data.get("subcategory_name", sub_key),
+                            "usage": "影响回应风格"
+                        }
+                        used_tags["demographic_context"].append(tag_info)
+    
+    def _get_emotional_influence(self, tag_name: str, search_strategy: Dict) -> str:
+        """获取情感标签的影响描述"""
+        tone = search_strategy.get("response_tone", "balanced")
+        adaptation = search_strategy.get("emotional_adaptation", "neutral")
+        
+        if "敏感" in tag_name or "焦虑" in tag_name:
+            return f"调整为{tone}语调，采用{adaptation}方式回应"
+        elif "乐观" in tag_name or "积极" in tag_name:
+            return f"采用{tone}语调，{adaptation}用户情绪"
+        else:
+            return f"影响回应语调为{tone}"
+    
+    def _is_relevant_to_query(self, tag_name: str, user_query: str) -> bool:
+        """判断标签是否与用户问题相关"""
+        # 简单的关键词匹配，可以后续优化为更智能的相关性判断
+        tag_keywords = tag_name.split()
+        query_lower = user_query.lower()
+        
+        for keyword in tag_keywords:
+            if keyword.lower() in query_lower:
+                return True
+        
+        # 检查语义相关性（简化版）
+        semantic_relations = {
+            "美食": ["吃", "餐", "食物", "料理", "菜"],
+            "运动": ["健身", "跑步", "锻炼", "体育"],
+            "音乐": ["歌", "音", "乐器", "演唱"],
+            "电影": ["影", "片", "电视", "观看"],
+            "读书": ["书", "阅读", "文学", "小说"]
+        }
+        
+        for concept, keywords in semantic_relations.items():
+            if concept in tag_name:
+                for kw in keywords:
+                    if kw in query_lower:
+                        return True
+        
+        return False
+    
+    def _add_response_adaptations(self, search_strategy: Dict, used_tags: Dict):
+        """添加回应适应性说明"""
+        adaptations = []
+        
+        tone = search_strategy.get("response_tone", "balanced")
+        if tone != "balanced":
+            adaptations.append(f"语调调整: {tone}")
+        
+        style = search_strategy.get("response_style", "balanced")
+        if style != "balanced":
+            adaptations.append(f"回应风格: {style}")
+        
+        emotional_adaptation = search_strategy.get("emotional_adaptation", "neutral")
+        if emotional_adaptation != "neutral":
+            adaptations.append(f"情感适应: {emotional_adaptation}")
+        
+        content_filters = search_strategy.get("content_filters", [])
+        if content_filters:
+            adaptations.append(f"内容过滤: 避免{', '.join(content_filters[:3])}")
+        
+        boost_topics = search_strategy.get("boost_topics", [])
+        if boost_topics:
+            adaptations.append(f"话题偏好: 倾向{', '.join(boost_topics[:3])}")
+        
+        used_tags["response_adaptations"] = adaptations
     
     def _build_response_prompt(self, query: str, knowledge: str, user_tags: Dict, 
                              strategy: Dict, context: Dict = None) -> str:

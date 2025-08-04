@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LightRAG标签体系演示</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .chat-section {
+            flex: 2;
+            background: white;
+            margin: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-section {
+            flex: 1;
+            background: white;
+            margin: 20px 20px 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .chat-header {
+            background: #4A90E2;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-content {
+            flex: 1;
+        }
+        
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+        
+        .user-message {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+        }
+        
+        .assistant-message {
+            background: white;
+            border: 1px solid #e9ecef;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+        }
+        
+        .chat-input input:focus {
+            border-color: #4A90E2;
+        }
+        
+        .chat-input button {
+            padding: 12px 24px;
+            background: #4A90E2;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .chat-input button:hover {
+            background: #357ABD;
+        }
+        
+        /* 知识添加模态窗口样式 */
+        .knowledge-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        
+        .knowledge-modal-content {
+            background-color: white;
+            margin: 2% auto;
+            padding: 0;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            height: 85vh;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .knowledge-modal-header {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 25px 30px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .knowledge-modal-header h2 {
+            margin: 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: rotate(90deg);
+        }
+        
+        .knowledge-modal-body {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .upload-section {
+            border: 3px dashed #28a745;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, #f8fff9, #e8f5e8);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .upload-section:hover {
+            border-color: #20c997;
+            background: linear-gradient(135deg, #f0fff4, #d4f4dd);
+            transform: translateY(-2px);
+        }
+        
+        .upload-section.dragover {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #f0f8ff, #e3f2fd);
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            color: #28a745;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .file-input {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .text-input-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .input-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .conversation-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s ease;
+            background: #f8f9fa;
+            box-sizing: border-box;
+        }
+        
+        .conversation-textarea:focus {
+            border-color: #28a745;
+            background: white;
+        }
+        
+        .conversation-textarea::placeholder {
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .format-guide {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #1565c0;
+        }
+        
+        .knowledge-modal-footer {
+            padding: 25px 30px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .progress-info {
+            flex: 1;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn-secondary {
+            padding: 12px 24px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .btn-primary {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #218838, #1ea180);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        
+        .btn-primary:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .processing-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        
+        .processing-overlay.active {
+            display: flex;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #28a745;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing-text {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 10px;
+        }
+        
+        .processing-subtext {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        /* 继续原有样式... */
+        .profile-title {
+            color: #343a40;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .tag-category {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+        }
+
+        .tag-category h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #495057;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+        }
+        
+        .tag-placeholder {
+            background: #f8f9fa;
+            color: #6c757d;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            font-weight: 400;
+            border: 1px dashed #dee2e6;
+            font-style: italic;
+            transition: all 0.3s ease;
+        }
+        
+        .tag-placeholder:hover {
+            background: #e9ecef;
+            border-color: #adb5bd;
+        }
+
+        .chat-messages.loading {
+            opacity: 0.7;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        /* 标签溯源相关样式 */
+        .tag-trace-modal .modal-content {
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .tag-overview {
+            background: linear-gradient(135deg, #f8f9ff, #e8f4fd);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .tag-overview .tag-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #007bff;
+            margin-right: 10px;
+        }
+        
+        .tag-overview .tag-category {
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 10px;
+        }
+        
+        .tag-overview .tag-confidence {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .chart-container {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        
+        .evidence-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .evidence-item {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .evidence-item.high-weight {
+            border-left-color: #28a745;
+            background: #f0fff4;
+        }
+        
+        .evidence-item.medium-weight {
+            border-left-color: #ffc107;
+            background: #fffbf0;
+        }
+        
+        .evidence-item.low-weight {
+            border-left-color: #6c757d;
+            background: #f8f9fa;
+        }
+        
+        .evidence-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        .evidence-text {
+            color: #495057;
+            line-height: 1.4;
+            margin-bottom: 8px;
+        }
+        
+        .evidence-contribution {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .history-timeline {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .history-entry {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+            position: relative;
+        }
+        
+        .history-entry.create {
+            border-left-color: #28a745;
+        }
+        
+        .history-entry.strengthen {
+            border-left-color: #17a2b8;
+        }
+        
+        .history-entry.weaken {
+            border-left-color: #ffc107;
+        }
+        
+        .history-time {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 5px;
+        }
+        
+        .history-action {
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .history-confidence {
+            font-size: 14px;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        
+        .history-evidence {
+            font-size: 13px;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .profile-tag {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            display: inline-block;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            margin: 2px;
+        }
+        
+        /* 新增标签样式 - 红底白字 */
+        .profile-tag.new-tag {
+            background: #dc3545;
+            color: white;
+            animation: newTagPulse 2s ease-in-out;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* 新标签闪烁动画 */
+        @keyframes newTagPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(220, 53, 69, 0.5);
+            }
+            100% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+            }
+        }
+        
+        /* 新标签悬停效果 */
+        .profile-tag.new-tag:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(220, 53, 69, 0.4);
+        }
+        
+        /* 历史标签悬停效果 */
+        .profile-tag:not(.new-tag):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .profile-tag.clickable::after {
+            content: "🔍";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 10px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .profile-tag.clickable:hover::after {
+            opacity: 1;
+        }
+        
+        /* 新标签特殊标识 */
+        .profile-tag.new-tag::before {
+            content: "✨";
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            font-size: 12px;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        
+        .trigger-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .tag-trigger-notification {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .triggered-tag {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .triggered-tag:hover {
+            background: #0056b3;
+            transform: scale(1.05);
+        }
+        
+        .triggered-tag.new {
+            background: #28a745;
+        }
+        
+        .triggered-tag.strengthen {
+            background: #17a2b8;
+        }
+        
+        .triggered-tag.weaken {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        /* 新增：二级标签结构样式 */
+        .profile-dimension {
+            margin-bottom: 25px;
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #e8e8e8;
+        }
+        
+        .dimension-title {
+            font-size: 16px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .dimension-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        .profile-subcategory {
+            margin-bottom: 15px;
+            padding-left: 20px;
+            border-left: 3px solid #d0d0d0;
+            position: relative;
+        }
+        
+        .profile-subcategory:last-child {
+            margin-bottom: 0;
+        }
+        
+        .subcategory-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+            font-weight: 500;
+            position: relative;
+        }
+        
+        .subcategory-title::before {
+            content: '▸';
+            color: #999;
+            margin-right: 5px;
+            font-size: 12px;
+        }
+        
+        /* 按分类着色的标签 */
+        .profile-tag[data-category="demographic_info"] {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+        
+        .profile-tag[data-category="interests_hobbies"] {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+        }
+        
+        .profile-tag[data-category="emotional_state"] {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+        
+        /* 按二级分类进一步细分颜色 */
+        .profile-tag[data-category="demographic_info"][data-subcategory="age"] {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+        }
+        
+        .profile-tag[data-category="demographic_info"][data-subcategory="gender"] {
+            background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+        }
+        
+        .profile-tag[data-category="demographic_info"][data-subcategory="location"] {
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+        }
+        
+        .profile-tag[data-category="interests_hobbies"][data-subcategory="entertainment"] {
+            background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+        }
+        
+        .profile-tag[data-category="interests_hobbies"][data-subcategory="sports"] {
+            background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+        }
+        
+        .profile-tag[data-category="interests_hobbies"][data-subcategory="learning_career"] {
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+        }
+        
+        .profile-tag[data-category="emotional_state"][data-subcategory="current_mood"] {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+        }
+        
+        .profile-tag[data-category="emotional_state"][data-subcategory="emotional_needs"] {
+            background: linear-gradient(135deg, #fd83c1 0%, #fd79a8 100%);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .profile-dimension {
+                padding: 10px;
+                margin-bottom: 20px;
+            }
+            
+            .profile-subcategory {
+                padding-left: 15px;
+                margin-bottom: 12px;
+            }
+            
+            .dimension-title {
+                font-size: 14px;
+                margin-bottom: 12px;
+            }
+            
+            .subcategory-title {
+                font-size: 13px;
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="chat-header">
+                <div class="header-content">
+                    <h2>🤖 LightRAG情感陪伴助手</h2>
+                    <p>集成智能标签体系的个性化聊天Demo</p>
+                </div>
+                <a href="/logout" class="logout-btn">🚪 退出登录</a>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant-message">
+                    <strong>助手:</strong> 你好！我是你的情感陪伴助手。我会通过我们的对话逐渐了解你的特点和偏好，为你提供更个性化的回应。随便聊些什么吧！ 😊
+                </div>
+            </div>
+            
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="输入你想说的话..." 
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">发送</button>
+                <button onclick="addKnowledge()" style="background: #28a745;">📚 添加知识</button>
+                <button onclick="resetUser()" style="background: #dc3545;">重置</button>
+            </div>
+        </div>
+        
+        <div class="profile-section">
+            <h2 class="profile-title">👤 用户画像</h2>
+            
+            <div id="profileContent">
+                <p style="color: #666; text-align: center;">开始对话后，这里会显示你的个性化标签</p>
+            </div>
+            
+            <!-- 标签溯源按钮 -->
+            <div class="profile-actions" style="margin-top: 15px; text-align: center; display: none;" id="profileActions">
+                <button class="btn-secondary" onclick="showTagStatistics()">📊 标签统计</button>
+                <button class="btn-secondary" onclick="showRecentTriggers()">🔍 最近触发</button>
+            </div>
+            
+            <div id="metricsSection" style="display: none;">
+                <h3>📊 综合指标</h3>
+                <div class="metrics-grid" id="metricsGrid">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 知识添加模态窗口 -->
+    <div id="knowledgeModal" class="knowledge-modal">
+        <div class="knowledge-modal-content">
+            <div class="processing-overlay" id="processingOverlay">
+                <div class="spinner"></div>
+                <div class="processing-text">正在处理对话文本...</div>
+                <div class="processing-subtext">分析对话内容并提取用户标签</div>
+            </div>
+            
+            <div class="knowledge-modal-header">
+                <h2>📚 智能对话分析与标签提取</h2>
+                <button class="close-btn" onclick="closeKnowledgeModal()">&times;</button>
+            </div>
+            
+            <div class="knowledge-modal-body">
+                <div class="upload-section" onclick="document.getElementById('fileInput').click()" 
+                     ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">点击上传对话文件或拖拽到此处</div>
+                    <div class="upload-subtext">支持 .txt, .md, .json 格式的对话文件</div>
+                    <input type="file" id="fileInput" class="file-input" accept=".txt,.md,.json" onchange="handleFileSelect(event)">
+                </div>
+                
+                <div class="text-input-section">
+                    <label class="input-label">
+                        💬 或直接粘贴结构化对话文本：
+                    </label>
+                    <textarea id="conversationText" class="conversation-textarea" 
+                              placeholder="请粘贴结构化的对话文本，例如：
+
+用户: 你好！今天心情不太好
+助手: 怎么了？发生什么事情了吗？
+用户: 工作上遇到了一些挫折，感觉很沮丧
+助手: 我理解你的感受...
+
+或者JSON格式：
+[
+  {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;你好！今天心情不太好&quot;},
+  {&quot;role&quot;: &quot;assistant&quot;, &quot;content&quot;: &quot;怎么了？发生什么事情了吗？&quot;},
+  {&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;工作上遇到了一些挫折，感觉很沮丧&quot;}
+]"></textarea>
+                    
+                    <div class="format-guide">
+                        <strong>💡 支持的格式：</strong><br>
+                        • <strong>文本格式：</strong> "用户: xxx" / "助手: xxx"<br>
+                        • <strong>JSON格式：</strong> [{"role": "user/assistant", "content": "..."}]<br>
+                        • <strong>Markdown格式：</strong> ## 用户 / ## 助手
+                    </div>
+                </div>
+            </div>
+            
+            <div class="knowledge-modal-footer">
+                <div class="progress-info" id="progressInfo">
+                    准备好处理对话文本和提取用户标签
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn-secondary" onclick="closeKnowledgeModal()">取消</button>
+                    <button class="btn-primary" id="processBtn" onclick="processConversation()">
+                        🧠 分析并提取标签
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签溯源模态窗口 -->
+    <div id="tagTraceModal" class="modal" style="display: none;">
+        <div class="modal-content tag-trace-modal">
+            <div class="modal-header">
+                <h3 id="tagTraceTitle">🔍 标签溯源</h3>
+                <button class="close-btn" onclick="closeTagTrace()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <!-- 标签基本信息 -->
+                <div class="tag-overview" id="tagOverview">
+                    <!-- 动态填充 -->
+                </div>
+                
+                <!-- 置信度变化图表 -->
+                <div class="confidence-chart" id="confidenceChart" style="display: none;">
+                    <h4>📈 置信度变化趋势</h4>
+                    <div class="chart-container">
+                        <canvas id="confidenceCanvas" width="400" height="200"></canvas>
+                    </div>
+                </div>
+                
+                <!-- 证据链 -->
+                <div class="evidence-chain" id="evidenceChain" style="display: none;">
+                    <h4>📝 支持证据</h4>
+                    <div class="evidence-list" id="evidenceList">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+                
+                <!-- 历史记录 -->
+                <div class="tag-history" id="tagHistorySection" style="display: none;">
+                    <h4>📚 变化历史</h4>
+                    <div class="history-timeline" id="historyTimeline">
+                        <!-- 动态填充 -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="exportTagReport()">📄 导出报告</button>
+                <button class="btn-primary" onclick="closeTagTrace()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 标签统计模态窗口 -->
+    <div id="tagStatsModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 标签统计总览</h3>
+                <button class="close-btn" onclick="closeTagStats()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="tagStatsContent">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeTagStats()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近触发模态窗口 -->
+    <div id="recentTriggersModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔍 最近标签触发</h3>
+                <button class="close-btn" onclick="closeRecentTriggers()">&times;</button>
+            </div>
+            
+            <div class="modal-body">
+                <div id="recentTriggersContent">
+                    <!-- 动态填充 -->
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn-primary" onclick="closeRecentTriggers()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let previousTags = {}; // 存储上一次的标签状态，用于对比新增标签
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // 显示用户消息
+            addMessageToChat('user', message);
+            input.value = '';
+            
+            // 显示加载状态
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.classList.add('loading');
+            
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 显示助手回应
+                    addMessageToChat('assistant', data.response);
+                    
+                    // 更新用户画像
+                    updateProfile(data.user_profile);
+                    
+                    // 显示提取的标签（用于调试）
+                    if (Object.keys(data.extracted_tags).length > 0) {
+                        console.log('提取的标签:', data.extracted_tags);
+                    }
+                } else {
+                    addMessageToChat('assistant', '抱歉，处理消息时出现错误：' + data.error);
+                }
+                
+            } catch (error) {
+                addMessageToChat('assistant', '网络连接错误，请稍后重试。');
+                console.error('Error:', error);
+            } finally {
+                chatMessages.classList.remove('loading');
+            }
+        }
+        
+        function addMessageToChat(sender, message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}-message`;
+            
+            if (sender === 'user') {
+                messageDiv.innerHTML = `<strong>你:</strong> ${message}`;
+            } else {
+                messageDiv.innerHTML = `<strong>助手:</strong> ${message}`;
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function updateProfile_old(userProfile) {
+            const profileContent = document.getElementById('profileContent');
+            const metricsSection = document.getElementById('metricsSection');
+            
+            // 定义所有维度的基础框架 - 新的二级标签结构
+            const allDimensions = [
+                { 
+                    key: 'demographic_info', 
+                    name: '基本人口统计学标签',
+                    subcategories: {
+                        'age': '年龄',
+                        'gender': '性别',
+                        'location': '地域'
+                    }
+                },
+                { 
+                    key: 'interests_hobbies', 
+                    name: '兴趣爱好标签',
+                    subcategories: {
+                        'entertainment': '娱乐爱好',
+                        'sports': '运动爱好',
+                        'learning_career': '学习与职业相关爱好'
+                    }
+                },
+                { 
+                    key: 'emotional_state', 
+                    name: '情绪与情感状态标签',
+                    subcategories: {
+                        'current_mood': '当前情绪状态',
+                        'emotional_needs': '情感需求'
+                    }
+                }
+            ];
+            
+            let html = '';
+            
+            // 总是显示所有维度
+            allDimensions.forEach(dimensionDef => {
+                // 查找当前维度的数据
+                let currentDimension = null;
+                if (userProfile && userProfile.active_dimensions) {
+                    currentDimension = userProfile.active_dimensions.find(d => 
+                        d.dimension === dimensionDef.key || 
+                        d.name === dimensionDef.name ||
+                        (d.name && d.name.includes(dimensionDef.name.substring(0, 4)))
+                    );
+                }
+                
+                html += `
+                    <div class="tag-category">
+                        <h3>${dimensionDef.name}</h3>
+                        <div class="tag-list">`;
+                
+                if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
+                    // 显示已有标签
+                    html += currentDimension.tags.map(tag => {
+                        const tagName = tag.name || tag.tag_name || tag;
+                        const confidence = tag.confidence || tag.avg_confidence || 0;
+                        return `<span class="tag">${tagName} (${(confidence * 100).toFixed(0)}%)</span>`;
+                    }).join('');
+                } else {
+                    // 显示空状态
+                    html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                }
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            profileContent.innerHTML = html;
+            
+            // 始终显示综合指标（即使是默认值）
+            const metricsGrid = document.getElementById('metricsGrid');
+            metricsGrid.innerHTML = `
+                <div class="metric-card">
+                    <div class="metric-value">${((userProfile?.emotional_health_index || 0.5) * 100).toFixed(0)}%</div>
+                    <div class="metric-label">情感健康指数</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">${((userProfile?.profile_maturity || 0) * 100).toFixed(0)}%</div>
+                    <div class="metric-label">画像成熟度</div>
+                </div>
+            `;
+            metricsSection.style.display = 'block';
+        }
+        
+        // 新的添加知识功能
+        function addKnowledge() {
+            const modal = document.getElementById('knowledgeModal');
+            const overlay = document.getElementById('processingOverlay');
+            
+            modal.style.display = 'block';
+            overlay.classList.remove('active');
+            document.getElementById('conversationText').value = '';
+            document.getElementById('progressInfo').textContent = '准备好处理对话文本和提取用户标签';
+            document.getElementById('processBtn').disabled = false;
+        }
+        
+        function closeKnowledgeModal() {
+            const modal = document.getElementById('knowledgeModal');
+            const overlay = document.getElementById('processingOverlay');
+            
+            modal.style.display = 'none';
+            overlay.classList.remove('active');
+            document.getElementById('processBtn').disabled = false;
+            document.getElementById('conversationText').value = '';
+            document.getElementById('progressInfo').textContent = '准备好处理对话文本和提取用户标签';
+        }
+        
+        // 文件拖拽处理
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').classList.remove('dragover');
+        }
+        
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        async function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('conversationText').value = content;
+                document.getElementById('progressInfo').textContent = `已加载文件：${file.name}`;
+                
+                // 调试信息
+                console.log('文件已加载:', file.name);
+                console.log('文件内容长度:', content.length);
+                console.log('文件内容前100字符:', content.substring(0, 100));
+                
+                // 验证文本框是否真的被填充了
+                const textareaValue = document.getElementById('conversationText').value;
+                console.log('文本框内容长度:', textareaValue.length);
+                console.log('文本框内容前100字符:', textareaValue.substring(0, 100));
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        // 处理对话文本并提取标签
+        async function processConversation() {
+            const text = document.getElementById('conversationText').value.trim();
+            
+            // 调试信息
+            console.log('开始处理对话文本');
+            console.log('文本框原始值长度:', document.getElementById('conversationText').value.length);
+            console.log('去除空白后文本长度:', text.length);
+            console.log('文本内容前200字符:', text.substring(0, 200));
+            
+            if (!text) {
+                console.log('文本为空，显示警告');
+                alert('请先输入或上传对话文本！');
+                return;
+            }
+            
+            console.log('文本验证通过，开始处理');
+            
+            // 显示处理中状态
+            const overlay = document.getElementById('processingOverlay');
+            overlay.classList.add('active');
+            document.getElementById('processBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/api/process_conversation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        conversation_text: text,
+                        extract_tags: true 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 更新用户画像
+                    if (data.user_profile) {
+                        updateProfile(data.user_profile);
+                    }
+                    
+                    // 显示提取结果
+                    let resultMessage = '✅ 对话处理完成！\n\n';
+                    if (data.extracted_tags && Object.keys(data.extracted_tags).length > 0) {
+                        resultMessage += '📋 提取的标签：\n';
+                        Object.entries(data.extracted_tags).forEach(([dimension, tags]) => {
+                            if (tags.length > 0) {
+                                resultMessage += `• ${dimension}: ${tags.join(', ')}\n`;
+                            }
+                        });
+                    }
+                    
+                    if (data.knowledge_added) {
+                        resultMessage += '\n📚 知识已成功添加到个人知识库！';
+                    }
+                    
+                    alert(resultMessage);
+                    closeKnowledgeModal();
+                } else {
+                    alert('❌ 处理失败：' + (data.error || '未知错误'));
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ 网络错误，请稍后重试');
+            } finally {
+                overlay.classList.remove('active');
+                document.getElementById('processBtn').disabled = false;
+            }
+        }
+        
+        // 点击模态窗口外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('knowledgeModal');
+            if (event.target == modal) {
+                closeKnowledgeModal();
+            }
+        }
+        
+        async function resetUser() {
+            if (!confirm('确定要重置用户会话吗？这将清除当前的对话历史和用户画像。')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/reset_user', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // 清空聊天记录
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="message assistant-message">
+                            <strong>助手:</strong> 你好！我是你的情感陪伴助手。我会通过我们的对话逐渐了解你的特点和偏好，为你提供更个性化的回应。随便聊些什么吧！ 😊
+                        </div>
+                    `;
+                    
+                    // 重置用户画像 - 显示初始化状态
+                    updateProfile({
+                        active_dimensions: [],
+                        emotional_health_index: 0.5,
+                        profile_maturity: 0.0
+                    });
+                    
+                    alert('用户会话已重置！');
+                } else {
+                    alert('重置失败，请稍后重试');
+                }
+            } catch (error) {
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 页面加载时获取用户画像和历史对话
+        window.onload = async function() {
+            try {
+                // 获取用户画像
+                const profileResponse = await fetch('/api/profile');
+                const profileData = await profileResponse.json();
+                
+                // 获取历史对话记录
+                const chatResponse = await fetch('/api/chat_history');
+                const chatData = await chatResponse.json();
+                
+                if (profileData.success) {
+                    const dimensions = profileData.user_tags.tag_dimensions;
+                    const activeDimensions = [];
+                    
+                    // 处理新的二级标签结构
+                    Object.entries(dimensions).forEach(([key, dimension]) => {
+                        const tags = [];
+                        
+                        // 处理新的二级标签结构
+                        if (dimension.subcategories) {
+                            // 遍历所有二级分类
+                            Object.entries(dimension.subcategories).forEach(([subKey, subcategoryData]) => {
+                                if (subcategoryData.active_tags && Array.isArray(subcategoryData.active_tags)) {
+                                    tags.push(...subcategoryData.active_tags.map(tag => ({
+                                        name: tag.tag_name || tag.name,
+                                        tag_name: tag.tag_name || tag.name,
+                                        confidence: tag.avg_confidence || tag.confidence || 0,
+                                        weight: tag.current_weight || tag.weight || 0,
+                                        avg_confidence: tag.avg_confidence || 0,
+                                        category: tag.category || key,
+                                        subcategory: tag.subcategory || subKey,
+                                        subcategory_name: subcategoryData.subcategory_name || subKey
+                                    })));
+                                }
+                            });
+                        } else if (dimension.active_tags && Array.isArray(dimension.active_tags)) {
+                            // 兼容旧的一级标签结构
+                            tags.push(...dimension.active_tags.map(tag => ({
+                                name: tag.tag_name || tag.name,
+                                tag_name: tag.tag_name || tag.name,
+                                confidence: tag.avg_confidence || tag.confidence || 0,
+                                weight: tag.current_weight || tag.weight || 0,
+                                avg_confidence: tag.avg_confidence || 0
+                            })));
+                        } else if (dimension.tags && Object.keys(dimension.tags).length > 0) {
+                            // 处理tags对象格式（向后兼容）
+                            tags.push(...Object.entries(dimension.tags).map(([tagName, tagInfo]) => ({
+                                name: tagName,
+                                tag_name: tagName,
+                                confidence: tagInfo.confidence || tagInfo.avg_confidence || 0,
+                                weight: tagInfo.weight || tagInfo.current_weight || 0,
+                                avg_confidence: tagInfo.avg_confidence || 0
+                            })));
+                        }
+                        
+                        // 总是添加维度，即使没有标签
+                        activeDimensions.push({
+                            name: dimension.dimension_name || dimension.name || key,
+                            dimension: key,
+                            tags: tags,
+                            subcategories: dimension.subcategories || null
+                        });
+                    });
+                    
+                    updateProfile({
+                        active_dimensions: activeDimensions,
+                        emotional_health_index: profileData.user_tags.emotional_health_index || 
+                                               profileData.user_tags.computed_metrics?.emotional_health_index || 0.5,
+                        profile_maturity: profileData.user_tags.profile_maturity || 
+                                         profileData.user_tags.computed_metrics?.overall_profile_maturity || 0.0
+                    });
+                } else {
+                    // 即使没有成功获取数据，也显示基础框架
+                    updateProfile({
+                        active_dimensions: [],
+                        emotional_health_index: 0.5,
+                        profile_maturity: 0.0
+                    });
+                }
+                
+                // 加载历史对话
+                if (chatData.success && chatData.chat_history && chatData.chat_history.length > 0) {
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.innerHTML = ''; // 清空默认消息
+                    
+                    chatData.chat_history.forEach(msg => {
+                        addMessageToChat(msg.role === 'user' ? 'user' : 'assistant', msg.content);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Failed to load initial data:', error);
+            }
+        }
+        
+        // ============= 标签溯源功能 =============
+        
+        // 显示标签溯源信息
+        async function showTagTrace(tagName) {
+            try {
+                const response = await fetch(`/api/tag_trace/${encodeURIComponent(tagName)}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTagTraceModal(data.trace_info);
+                } else {
+                    alert('获取标签溯源信息失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取标签溯源信息错误:', error);
+                alert('获取标签溯源信息失败: ' + error.message);
+            }
+        }
+        
+        // 显示标签溯源模态窗口
+        function displayTagTraceModal(traceInfo) {
+            const modal = document.getElementById('tagTraceModal');
+            const title = document.getElementById('tagTraceTitle');
+            const overview = document.getElementById('tagOverview');
+            const evidenceChain = document.getElementById('evidenceChain');
+            const evidenceList = document.getElementById('evidenceList');
+            const historySection = document.getElementById('tagHistorySection');
+            const historyTimeline = document.getElementById('historyTimeline');
+            const confidenceChart = document.getElementById('confidenceChart');
+            
+            // 设置标题
+            title.textContent = `🔍 标签溯源：${traceInfo.tag_name}`;
+            
+            // 显示基本信息
+            const stats = traceInfo.statistics || {};
+            const currentConfidence = stats.current_confidence || 0;
+            const creationTime = stats.creation_time || null;
+            const totalTriggers = stats.total_triggers || 0;
+            const positiveTriggers = stats.positive_triggers || 0;
+            const negativeTriggers = stats.negative_triggers || 0;
+            const evidenceCount = stats.evidence_count || 0;
+            
+            overview.innerHTML = `
+                <div class="tag-info">
+                    <span class="tag-name">${traceInfo.tag_name}</span>
+                    <span class="tag-category">${getCategoryDisplayName('unknown')}</span>
+                    <span class="tag-confidence">置信度: ${(currentConfidence * 100).toFixed(1)}%</span>
+                </div>
+                <div style="margin-top: 10px; font-size: 14px; color: #6c757d;">
+                    <div>创建时间: ${creationTime ? new Date(creationTime).toLocaleString() : '暂无记录'}</div>
+                    <div>总触发次数: ${totalTriggers} | 正向: ${positiveTriggers} | 负向: ${negativeTriggers}</div>
+                    <div>证据数量: ${evidenceCount}</div>
+                </div>
+                ${(traceInfo.history.length === 0 && traceInfo.evidence_chain.length === 0) ? 
+                    '<div style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; color: #856404;"><strong>📝 提示：</strong>此标签暂无溯源记录，可能是在溯源系统启用前创建的。继续对话以生成新的溯源信息。</div>' : 
+                    ''
+                }
+            `;
+            
+            // 显示证据链
+            if (traceInfo.evidence_chain && traceInfo.evidence_chain.length > 0) {
+                evidenceChain.style.display = 'block';
+                evidenceList.innerHTML = '';
+                
+                traceInfo.evidence_chain.forEach(evidence => {
+                    const evidenceDiv = document.createElement('div');
+                    evidenceDiv.className = `evidence-item ${getEvidenceWeightClass(evidence.weight)}`;
+                    evidenceDiv.innerHTML = `
+                        <div class="evidence-header">
+                            <span class="evidence-time">${new Date(evidence.timestamp).toLocaleString()}</span>
+                            <span class="evidence-weight">权重: ${evidence.weight.toFixed(2)}</span>
+                        </div>
+                        <div class="evidence-text">${evidence.text}</div>
+                        <div class="evidence-contribution">
+                            对置信度贡献: ${evidence.confidence_contribution > 0 ? '+' : ''}${(evidence.confidence_contribution * 100).toFixed(1)}%
+                        </div>
+                    `;
+                    evidenceList.appendChild(evidenceDiv);
+                });
+            } else {
+                evidenceChain.style.display = 'block';
+                evidenceList.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px; font-style: italic;">📝 暂无证据记录</div>';
+            }
+            
+            // 显示历史记录
+            if (traceInfo.history && traceInfo.history.length > 0) {
+                historySection.style.display = 'block';
+                historyTimeline.innerHTML = '';
+                
+                traceInfo.history.forEach(entry => {
+                    const historyDiv = document.createElement('div');
+                    historyDiv.className = `history-entry ${entry.action}`;
+                    historyDiv.innerHTML = `
+                        <div class="history-time">${new Date(entry.timestamp).toLocaleString()}</div>
+                        <div class="history-action">${getActionDescription(entry.action)}</div>
+                        <div class="history-confidence">置信度: ${(entry.confidence * 100).toFixed(1)}%</div>
+                        <div class="history-evidence">${entry.evidence}</div>
+                    `;
+                    historyTimeline.appendChild(historyDiv);
+                });
+            } else {
+                historySection.style.display = 'block';
+                historyTimeline.innerHTML = '<div style="text-align: center; color: #6c757d; padding: 20px; font-style: italic;">📈 暂无历史记录</div>';
+            }
+            
+            // 显示置信度图表
+            if (traceInfo.confidence_timeline && traceInfo.confidence_timeline.length > 1) {
+                confidenceChart.style.display = 'block';
+                drawConfidenceChart(traceInfo.confidence_timeline);
+            } else {
+                confidenceChart.style.display = 'block';
+                const canvas = document.getElementById('confidenceCanvas');
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('📊 暂无置信度变化数据', canvas.width / 2, canvas.height / 2);
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // 绘制置信度变化图表
+        function drawConfidenceChart(timeline) {
+            const canvas = document.getElementById('confidenceCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清除画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (timeline.length < 2) return;
+            
+            const padding = 40;
+            const width = canvas.width - 2 * padding;
+            const height = canvas.height - 2 * padding;
+            
+            // 找到最大值和最小值
+            const maxValue = Math.max(...timeline.map(t => t.confidence));
+            const minValue = Math.min(...timeline.map(t => t.confidence));
+            const range = maxValue - minValue || 1;
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = '#dee2e6';
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, padding + height);
+            ctx.lineTo(padding + width, padding + height);
+            ctx.stroke();
+            
+            // 绘制数据线
+            ctx.strokeStyle = '#007bff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            
+            timeline.forEach((point, index) => {
+                const x = padding + (index / (timeline.length - 1)) * width;
+                const y = padding + height - ((point.confidence - minValue) / range) * height;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制数据点
+            ctx.fillStyle = '#007bff';
+            timeline.forEach((point, index) => {
+                const x = padding + (index / (timeline.length - 1)) * width;
+                const y = padding + height - ((point.confidence - minValue) / range) * height;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // 添加标签
+            ctx.fillStyle = '#6c757d';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            
+            // Y轴标签
+            ctx.textAlign = 'right';
+            ctx.fillText((maxValue * 100).toFixed(0) + '%', padding - 10, padding + 5);
+            ctx.fillText((minValue * 100).toFixed(0) + '%', padding - 10, padding + height + 5);
+        }
+        
+        // 显示标签统计
+        async function showTagStatistics() {
+            try {
+                const response = await fetch('/api/tag_statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayTagStatsModal(data);
+                } else {
+                    alert('获取标签统计失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取标签统计错误:', error);
+                alert('获取标签统计失败');
+            }
+        }
+        
+        // 显示标签统计模态窗口
+        function displayTagStatsModal(data) {
+            const modal = document.getElementById('tagStatsModal');
+            const content = document.getElementById('tagStatsContent');
+            
+            let html = `
+                <div class="stats-overview">
+                    <h4>📊 总览</h4>
+                    <p>总标签数: ${data.total_tags} | 类别数: ${data.total_categories}</p>
+                </div>
+            `;
+            
+            // 按类别显示标签统计
+            Object.entries(data.tag_statistics).forEach(([category, tags]) => {
+                html += `
+                    <div class="category-stats">
+                        <h4>${getCategoryDisplayName(category)}</h4>
+                        <div class="tags-stats-grid">
+                `;
+                
+                tags.forEach(tag => {
+                    html += `
+                        <div class="tag-stat-item" onclick="showTagTrace('${tag.tag_name}')">
+                            <div class="tag-stat-name">${tag.tag_name}</div>
+                            <div class="tag-stat-confidence">${(tag.current_confidence * 100).toFixed(1)}%</div>
+                            <div class="tag-stat-triggers">触发: ${tag.total_triggers}次</div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // 显示最近触发
+            if (data.recent_triggers && data.recent_triggers.length > 0) {
+                html += `
+                    <div class="recent-triggers">
+                        <h4>🔍 最近触发</h4>
+                        <div class="triggers-list">
+                `;
+                
+                data.recent_triggers.slice(0, 5).forEach(trigger => {
+                    html += `
+                        <div class="trigger-item">
+                            <span class="trigger-tag ${trigger.action_type}">${trigger.tag_name}</span>
+                            <span class="trigger-action">${getActionDescription(trigger.action_type)}</span>
+                            <span class="trigger-time">${new Date(trigger.trigger_time).toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+            modal.style.display = 'block';
+        }
+        
+        // 显示最近触发
+        async function showRecentTriggers() {
+            try {
+                const response = await fetch('/api/tag_statistics');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayRecentTriggersModal(data.recent_triggers);
+                } else {
+                    alert('获取最近触发失败: ' + data.error);
+                }
+            } catch (error) {
+                console.error('获取最近触发错误:', error);
+                alert('获取最近触发失败');
+            }
+        }
+        
+        // 显示最近触发模态窗口
+        function displayRecentTriggersModal(triggers) {
+            const modal = document.getElementById('recentTriggersModal');
+            const content = document.getElementById('recentTriggersContent');
+            
+            if (!triggers || triggers.length === 0) {
+                content.innerHTML = '<p style="text-align: center; color: #6c757d;">暂无触发记录</p>';
+            } else {
+                let html = '<div class="triggers-timeline">';
+                
+                triggers.forEach(trigger => {
+                    html += `
+                        <div class="trigger-timeline-item ${trigger.action_type}">
+                            <div class="trigger-header">
+                                <span class="trigger-tag-name">${trigger.tag_name}</span>
+                                <span class="trigger-time">${new Date(trigger.trigger_time).toLocaleString()}</span>
+                            </div>
+                            <div class="trigger-action">${getActionDescription(trigger.action_type)}</div>
+                            <div class="trigger-confidence-change">
+                                置信度: ${(trigger.confidence_before * 100).toFixed(1)}% → ${(trigger.confidence_after * 100).toFixed(1)}%
+                                (${trigger.confidence_delta > 0 ? '+' : ''}${(trigger.confidence_delta * 100).toFixed(1)}%)
+                            </div>
+                            <div class="trigger-evidence">${trigger.evidence}</div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                content.innerHTML = html;
+            }
+            
+            modal.style.display = 'block';
+        }
+        
+        // 导出标签报告
+        async function exportTagReport() {
+            const tagName = document.getElementById('tagTraceTitle').textContent.replace('🔍 标签溯源：', '');
+            
+            try {
+                const response = await fetch(`/api/export_tag_report/${encodeURIComponent(tagName)}?format=markdown`);
+                const report = await response.text();
+                
+                // 创建下载链接
+                const blob = new Blob([report], { type: 'text/markdown' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${tagName}_溯源报告.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+                
+            } catch (error) {
+                console.error('导出报告错误:', error);
+                alert('导出报告失败');
+            }
+        }
+        
+        // 关闭模态窗口的函数
+        function closeTagTrace() {
+            document.getElementById('tagTraceModal').style.display = 'none';
+        }
+        
+        function closeTagStats() {
+            document.getElementById('tagStatsModal').style.display = 'none';
+        }
+        
+        function closeRecentTriggers() {
+            document.getElementById('recentTriggersModal').style.display = 'none';
+        }
+        
+        // 辅助函数
+        function getCategoryDisplayName(category) {
+            const categoryNames = {
+                'emotional_traits': '情感特征',
+                'interest_preferences': '兴趣偏好',
+                'interaction_habits': '互动习惯',
+                'value_principles': '价值观'
+            };
+            return categoryNames[category] || category;
+        }
+        
+        function getActionDescription(action) {
+            const actionDescriptions = {
+                'create': '新建标签',
+                'strengthen': '强化标签',
+                'weaken': '弱化标签',
+                'update': '更新标签'
+            };
+            return actionDescriptions[action] || action;
+        }
+        
+        function getEvidenceWeightClass(weight) {
+            if (weight >= 0.7) return 'high-weight';
+            if (weight >= 0.4) return 'medium-weight';
+            return 'low-weight';
+        }
+        
+        // 检测新标签的辅助函数
+        function isNewTag(tagName, category) {
+            if (!previousTags[category]) return true;
+            return !previousTags[category].some(prevTag => prevTag.name === tagName);
+        }
+        
+        // 更新previousTags的辅助函数
+        function updatePreviousTags(profile) {
+            const newPreviousTags = {};
+            
+            // 定义所有维度的基础框架 - 新的二级标签结构
+            const allDimensions = [
+                { 
+                    key: 'demographic_info', 
+                    name: '基本人口统计学标签',
+                    subcategories: {
+                        'age': '年龄',
+                        'gender': '性别',
+                        'location': '地域'
+                    }
+                },
+                { 
+                    key: 'interests_hobbies', 
+                    name: '兴趣爱好标签',
+                    subcategories: {
+                        'entertainment': '娱乐爱好',
+                        'sports': '运动爱好',
+                        'learning_career': '学习与职业相关爱好'
+                    }
+                },
+                { 
+                    key: 'emotional_state', 
+                    name: '情绪与情感状态标签',
+                    subcategories: {
+                        'current_mood': '当前情绪状态',
+                        'emotional_needs': '情感需求'
+                    }
+                }
+            ];
+            
+            if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
+                // 旧格式
+                allDimensions.forEach(dimensionDef => {
+                    let currentDimension = profile.active_dimensions.find(d => 
+                        d.dimension === dimensionDef.key || 
+                        d.name === dimensionDef.name ||
+                        (d.name && d.name.includes(dimensionDef.name.substring(0, 4)))
+                    );
+                    
+                    if (currentDimension && currentDimension.tags) {
+                        newPreviousTags[dimensionDef.key] = currentDimension.tags.map(tag => ({
+                            name: tag.name || tag.tag_name || tag,
+                            confidence: tag.confidence || tag.avg_confidence || 0
+                        }));
+                    }
+                });
+            } else {
+                // 新格式
+                allDimensions.forEach(dimensionDef => {
+                    const tags = profile[dimensionDef.key];
+                    if (Array.isArray(tags) && tags.length > 0) {
+                        newPreviousTags[dimensionDef.key] = tags.map(tag => ({
+                            name: tag.name,
+                            confidence: tag.confidence
+                        }));
+                    }
+                });
+            }
+            
+            // 延迟更新previousTags，让新标签显示一段时间后变成历史标签
+            setTimeout(() => {
+                previousTags = newPreviousTags;
+                // 移除所有新标签的样式，让它们变成历史标签
+                document.querySelectorAll('.profile-tag.new-tag').forEach(tag => {
+                    tag.classList.remove('new-tag');
+                });
+            }, 5000); // 5秒后将新标签变为历史标签
+        }
+        
+        // 修改用户画像显示函数，添加点击事件，支持多种数据格式
+        function updateProfile(profile) {
+            const profileContent = document.getElementById('profileContent');
+            const metricsSection = document.getElementById('metricsSection');
+            const profileActions = document.getElementById('profileActions');
+            
+            if (!profile || Object.keys(profile).length === 0) {
+                profileContent.innerHTML = '<p style="color: #666; text-align: center;">还没有生成用户画像，继续对话来建立你的个性化标签</p>';
+                metricsSection.style.display = 'none';
+                profileActions.style.display = 'none';
+                return;
+            }
+            
+            let html = '';
+            let hasAnyTags = false;
+            
+            // 定义所有维度的基础框架 - 新的二级标签结构
+            const allDimensions = [
+                { 
+                    key: 'demographic_info', 
+                    name: '基本人口统计学标签',
+                    subcategories: {
+                        'age': '年龄',
+                        'gender': '性别',
+                        'location': '地域'
+                    }
+                },
+                { 
+                    key: 'interests_hobbies', 
+                    name: '兴趣爱好标签',
+                    subcategories: {
+                        'entertainment': '娱乐爱好',
+                        'sports': '运动爱好',
+                        'learning_career': '学习与职业相关爱好'
+                    }
+                },
+                { 
+                    key: 'emotional_state', 
+                    name: '情绪与情感状态标签',
+                    subcategories: {
+                        'current_mood': '当前情绪状态',
+                        'emotional_needs': '情感需求'
+                    }
+                }
+            ];
+            
+            // 处理新的二级标签结构或向后兼容
+            if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
+                // 处理从后端获取的标准化数据格式
+                allDimensions.forEach(dimensionDef => {
+                    let currentDimension = profile.active_dimensions.find(d => 
+                        d.dimension === dimensionDef.key || 
+                        d.name === dimensionDef.name ||
+                        (d.name && d.name.includes(dimensionDef.name.substring(0, 4)))
+                    );
+                    
+                    html += `<div class="profile-dimension">`;
+                    html += `<h3 class="dimension-title">${dimensionDef.name}</h3>`;
+                    
+                    // 如果有二级分类信息，按二级分类显示
+                    if (currentDimension && currentDimension.subcategories) {
+                        Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
+                            const subcategoryTags = currentDimension.tags.filter(tag => 
+                                tag.subcategory === subKey
+                            );
+                            
+                            if (subcategoryTags.length > 0) {
+                                html += `<div class="profile-subcategory">`;
+                                html += `<h4 class="subcategory-title">${subName}</h4>`;
+                                html += `<div class="profile-tags">`;
+                                
+                                hasAnyTags = true;
+                                subcategoryTags.forEach(tag => {
+                                    const tagName = tag.name || tag.tag_name || tag;
+                                    const confidence = tag.confidence || tag.avg_confidence || 0;
+                                    const isNew = isNewTag(tagName, dimensionDef.key);
+                                    const newTagClass = isNew ? ' new-tag' : '';
+                                    html += `<span class="profile-tag clickable${newTagClass}" 
+                                                  onclick="showTagTrace('${tagName}')" 
+                                                  title="点击查看标签溯源"
+                                                  data-category="${dimensionDef.key}"
+                                                  data-subcategory="${subKey}">
+                                        ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                    </span>`;
+                                });
+                                
+                                html += `</div></div>`;
+                            }
+                        });
+                        
+                        // 如果没有任何二级分类有标签，显示占位符
+                        const hasAnySubcategoryTags = Object.keys(dimensionDef.subcategories).some(subKey =>
+                            currentDimension.tags.some(tag => tag.subcategory === subKey)
+                        );
+                        
+                        if (!hasAnySubcategoryTags) {
+                            html += `<div class="profile-tags">`;
+                            html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                            html += `</div>`;
+                        }
+                    } else if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
+                        // 兼容旧格式：没有二级分类信息
+                        html += `<div class="profile-tags">`;
+                        hasAnyTags = true;
+                        currentDimension.tags.forEach(tag => {
+                            const tagName = tag.name || tag.tag_name || tag;
+                            const confidence = tag.confidence || tag.avg_confidence || 0;
+                            const isNew = isNewTag(tagName, dimensionDef.key);
+                            const newTagClass = isNew ? ' new-tag' : '';
+                            html += `<span class="profile-tag clickable${newTagClass}" onclick="showTagTrace('${tagName}')" title="点击查看标签溯源">
+                                ${tagName} (${(confidence * 100).toFixed(0)}%)
+                            </span>`;
+                        });
+                        html += `</div>`;
+                    } else {
+                        // 没有标签的情况
+                        html += `<div class="profile-tags">`;
+                        html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+            } else {
+                // 处理其他格式（向后兼容）
+                allDimensions.forEach(dimensionDef => {
+                    html += `<div class="profile-dimension">`;
+                    html += `<h3 class="dimension-title">${dimensionDef.name}</h3>`;
+                    html += `<div class="profile-tags">`;
+                    html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                    html += `</div></div>`;
+                });
+            }
+            
+            profileContent.innerHTML = html;
+            
+            // 显示或隐藏操作按钮
+            if (hasAnyTags) {
+                profileActions.style.display = 'block';
+            } else {
+                profileActions.style.display = 'none';
+            }
+            
+            // 处理综合指标
+            if (profile.computed_metrics) {
+                const metrics = profile.computed_metrics;
+                const metricsGrid = document.getElementById('metricsGrid');
+                
+                let metricsHtml = '';
+                Object.entries(metrics).forEach(([key, value]) => {
+                    const displayName = getMetricDisplayName(key);
+                    const displayValue = typeof value === 'number' ? 
+                        (value > 1 ? value.toFixed(0) : (value * 100).toFixed(0) + '%') : 
+                        value;
+                    
+                    metricsHtml += `
+                        <div class="metric-item">
+                            <div class="metric-value">${displayValue}</div>
+                            <div class="metric-label">${displayName}</div>
+                        </div>
+                    `;
+                });
+                
+                if (metricsHtml) {
+                    metricsGrid.innerHTML = metricsHtml;
+                    metricsSection.style.display = 'block';
+                } else {
+                    metricsSection.style.display = 'none';
+                }
+            } else {
+                metricsSection.style.display = 'none';
+            }
+            
+            // 更新previousTags以便下次对比
+            updatePreviousTags(profile);
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化previousTags为空，这样第一次加载时所有标签都会被认为是新标签
+            previousTags = {};
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件上传调试页面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .upload-section {
+            border: 2px dashed #007bff;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .upload-section:hover {
+            background-color: #f8f9fa;
+        }
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>文件上传调试页面</h1>
+    
+    <div class="upload-section" onclick="document.getElementById('fileInput').click()" 
+         ondrop="handleFileDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+        <div>📄 点击上传文件或拖拽到此处</div>
+        <div>支持 .txt, .md, .json 格式</div>
+        <input type="file" id="fileInput" style="display: none;" accept=".txt,.md,.json" onchange="handleFileSelect(event)">
+    </div>
+    
+    <div>
+        <label for="conversationText">对话文本：</label>
+        <textarea id="conversationText" placeholder="文件内容会显示在这里..."></textarea>
+    </div>
+    
+    <div>
+        <button onclick="testValidation()">测试验证逻辑</button>
+        <button onclick="clearText()">清空文本</button>
+        <button onclick="showDebugInfo()">显示调试信息</button>
+    </div>
+    
+    <div id="debugInfo" class="debug-info"></div>
+
+    <script>
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').style.backgroundColor = '#e3f2fd';
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').style.backgroundColor = '';
+        }
+        
+        function handleFileDrop(e) {
+            e.preventDefault();
+            e.target.closest('.upload-section').style.backgroundColor = '';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                document.getElementById('conversationText').value = content;
+                
+                // 显示调试信息
+                const debugInfo = `文件上传成功！
+文件名: ${file.name}
+文件大小: ${file.size} 字节
+文件类型: ${file.type}
+内容长度: ${content.length} 字符
+内容前200字符: ${content.substring(0, 200)}
+内容最后100字符: ${content.substring(Math.max(0, content.length - 100))}
+
+文本框验证:
+文本框元素存在: ${document.getElementById('conversationText') ? '是' : '否'}
+文本框值长度: ${document.getElementById('conversationText').value.length}
+文本框值前100字符: ${document.getElementById('conversationText').value.substring(0, 100)}`;
+                
+                document.getElementById('debugInfo').textContent = debugInfo;
+                console.log('文件处理完成:', debugInfo);
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        function testValidation() {
+            const text = document.getElementById('conversationText').value.trim();
+            const debugInfo = `验证测试结果:
+原始文本长度: ${document.getElementById('conversationText').value.length}
+去除空白后长度: ${text.length}
+是否为空: ${!text ? '是' : '否'}
+文本前200字符: ${text.substring(0, 200)}`;
+            
+            document.getElementById('debugInfo').textContent = debugInfo;
+            
+            if (!text) {
+                alert('文本为空！');
+            } else {
+                alert('文本验证通过！');
+            }
+        }
+        
+        function clearText() {
+            document.getElementById('conversationText').value = '';
+            document.getElementById('debugInfo').textContent = '文本已清空';
+        }
+        
+        function showDebugInfo() {
+            const textarea = document.getElementById('conversationText');
+            const text = textarea.value;
+            const debugInfo = `当前状态:
+文本框元素: ${textarea ? '存在' : '不存在'}
+文本框值长度: ${text.length}
+文本框值类型: ${typeof text}
+是否为空字符串: ${text === '' ? '是' : '否'}
+去除空白后长度: ${text.trim().length}
+文本前200字符: ${text.substring(0, 200)}
+文本最后100字符: ${text.substring(Math.max(0, text.length - 100))}`;
+            
+            document.getElementById('debugInfo').textContent = debugInfo;
+        }
+    </script>
+</body>
+</html>

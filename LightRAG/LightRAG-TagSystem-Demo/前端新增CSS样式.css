@@ -1,0 +1,402 @@
+/*
+ * 前端适配新标签结构的CSS样式
+ * 这些样式需要添加到现有的CSS文件中
+ */
+
+/* ==================== 二级标签结构样式 ==================== */
+
+/* 一级维度容器 */
+.profile-dimension {
+    margin-bottom: 25px;
+    background: #fafafa;
+    border-radius: 8px;
+    padding: 15px;
+    border: 1px solid #e8e8e8;
+}
+
+/* 一级维度标题 */
+.dimension-title {
+    font-size: 16px;
+    color: #333;
+    margin-bottom: 15px;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.dimension-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin-right: 10px;
+    border-radius: 2px;
+}
+
+/* 二级分类容器 */
+.profile-subcategory {
+    margin-bottom: 15px;
+    padding-left: 20px;
+    border-left: 3px solid #d0d0d0;
+    position: relative;
+}
+
+.profile-subcategory:last-child {
+    margin-bottom: 0;
+}
+
+/* 二级分类标题 */
+.subcategory-title {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    font-weight: 500;
+    position: relative;
+}
+
+.subcategory-title::before {
+    content: '▸';
+    color: #999;
+    margin-right: 5px;
+    font-size: 12px;
+}
+
+/* 标签容器 */
+.profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+/* 标签样式 */
+.profile-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-tag::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.profile-tag:hover::before {
+    left: 100%;
+}
+
+.profile-tag:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.profile-tag.clickable {
+    cursor: pointer;
+}
+
+/* 按分类着色的标签 */
+.profile-tag[data-category="demographic_info"] {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.profile-tag[data-category="interests_hobbies"] {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.profile-tag[data-category="emotional_state"] {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+/* 按二级分类进一步细分颜色 */
+.profile-tag[data-category="demographic_info"][data-subcategory="age"] {
+    background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
+}
+
+.profile-tag[data-category="demographic_info"][data-subcategory="gender"] {
+    background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
+}
+
+.profile-tag[data-category="demographic_info"][data-subcategory="location"] {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+}
+
+.profile-tag[data-category="interests_hobbies"][data-subcategory="entertainment"] {
+    background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%);
+}
+
+.profile-tag[data-category="interests_hobbies"][data-subcategory="sports"] {
+    background: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+}
+
+.profile-tag[data-category="interests_hobbies"][data-subcategory="learning_career"] {
+    background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%);
+}
+
+.profile-tag[data-category="emotional_state"][data-subcategory="current_mood"] {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+}
+
+.profile-tag[data-category="emotional_state"][data-subcategory="emotional_needs"] {
+    background: linear-gradient(135deg, #fd83c1 0%, #fd79a8 100%);
+}
+
+/* 新标签动画效果 */
+.profile-tag.new-tag {
+    animation: newTagPulse 2s ease-in-out infinite;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+@keyframes newTagPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
+    }
+}
+
+/* 标签占位符 */
+.tag-placeholder {
+    color: #999;
+    font-style: italic;
+    background: #f5f5f5;
+    border: 1px dashed #ccc;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 12px;
+}
+
+/* ==================== 标签统计模态窗口样式 ==================== */
+
+.subcategory-stats {
+    margin-bottom: 20px;
+    padding-left: 15px;
+    border-left: 2px solid #e0e0e0;
+}
+
+.subcategory-stats h5 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.tags-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tag-stat-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.tag-stat-item:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.tag-stat-name {
+    font-weight: 500;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.tag-stat-confidence {
+    font-size: 12px;
+    color: #007bff;
+    margin-bottom: 3px;
+}
+
+.tag-stat-triggers {
+    font-size: 11px;
+    color: #6c757d;
+}
+
+/* ==================== 响应式设计 ==================== */
+
+@media (max-width: 768px) {
+    .profile-dimension {
+        padding: 10px;
+        margin-bottom: 20px;
+    }
+    
+    .profile-subcategory {
+        padding-left: 15px;
+        margin-bottom: 12px;
+    }
+    
+    .dimension-title {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+    
+    .subcategory-title {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    
+    .profile-tag {
+        font-size: 11px;
+        padding: 4px 8px;
+    }
+    
+    .tags-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== 标签分类图例 ==================== */
+
+.tag-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.legend-color.demographic {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+}
+
+.legend-color.interests {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.legend-color.emotional {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+}
+
+.legend-text {
+    font-size: 12px;
+    color: #666;
+}
+
+/* ==================== 标签交互增强 ==================== */
+
+.profile-tag {
+    position: relative;
+}
+
+.profile-tag::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.profile-tag:hover::after {
+    opacity: 1;
+    visibility: visible;
+    bottom: calc(100% + 5px);
+}
+
+/* ==================== 加载动画 ==================== */
+
+.loading-tags {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.loading-tag {
+    width: 30px;
+    height: 15px;
+    background: #e0e0e0;
+    border-radius: 8px;
+    animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+.loading-tag:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-tag:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes loadingPulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+/* ==================== 标签计数器 ==================== */
+
+.dimension-title .tag-count {
+    margin-left: auto;
+    background: #007bff;
+    color: white;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: normal;
+}
+
+.subcategory-title .tag-count {
+    margin-left: auto;
+    background: #6c757d;
+    color: white;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 8px;
+    font-weight: normal;
+}

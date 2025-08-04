@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 # 添加父目录到路径以便导入
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from core.tag_extractor import TagInfo
+from core.tag_extractor import TagInfo, TagExtractor
 
 # 内嵌冲突处理器类
 @dataclass
@@ -262,7 +262,7 @@ class TagManager:
         except Exception as e:
             print(f"警告: 无法加载性能配置，使用默认设置: {e}")
             return {
-                'enable_debug_logs': False,
+                'enable_debug_logs': True,  # 🔧 临时启用调试模式
                 'enable_conflict_detection': True,
                 'conflict_detection_mode': 'fast',
                 'max_tags_for_temporal_check': 10,
@@ -318,24 +318,144 @@ class TagManager:
                 "interests_hobbies": {
                     "dimension_name": "兴趣爱好标签",
                     "subcategories": {
-                        "entertainment": {
-                            "subcategory_name": "娱乐爱好",
+                        "art_creation": {
+                            "subcategory_name": "文艺创作类",
                             "active_tags": [],
                             "dominant_tag": None,
                             "dimension_weight": 0.0,
                             "stability_score": 0.0,
                             "conflict_history": []
                         },
-                        "sports": {
-                            "subcategory_name": "运动爱好",
+                        "handcraft_diy": {
+                            "subcategory_name": "手工DIY类",
                             "active_tags": [],
                             "dominant_tag": None,
                             "dimension_weight": 0.0,
                             "stability_score": 0.0,
                             "conflict_history": []
                         },
-                        "learning_career": {
-                            "subcategory_name": "学习与职业相关爱好",
+                        "music_appreciation": {
+                            "subcategory_name": "音乐欣赏类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "music_performance": {
+                            "subcategory_name": "音乐演奏类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "film_tv_appreciation": {
+                            "subcategory_name": "影视欣赏类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "ball_sports": {
+                            "subcategory_name": "球类运动类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "sports_watching": {
+                            "subcategory_name": "运动比赛欣赏类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "extreme_sports": {
+                            "subcategory_name": "极限运动类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "health_fitness": {
+                            "subcategory_name": "养生锻炼身体类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "pet_keeping": {
+                            "subcategory_name": "饲养宠物类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "home_cooking": {
+                            "subcategory_name": "家常菜烹饪类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "baking": {
+                            "subcategory_name": "烘焙类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "food_exploration": {
+                            "subcategory_name": "美食探店类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "offline_socializing": {
+                            "subcategory_name": "线下聚会社交类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "home_design": {
+                            "subcategory_name": "家装设计类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "knowledge_learning": {
+                            "subcategory_name": "知识学习类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "collecting_appreciation": {
+                            "subcategory_name": "收藏鉴赏类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "life_experience": {
+                            "subcategory_name": "体验生活类",
                             "active_tags": [],
                             "dominant_tag": None,
                             "dimension_weight": 0.0,
@@ -439,29 +559,66 @@ class TagManager:
             # 新的二级标签结构
             for new_tag in new_tags:
                 subcategory_key = new_tag.subcategory
+                
+                # 🔧 修复：添加调试日志和自动创建缺失的子分类
+                if debug_mode:
+                    print(f"🔍 [调试] 处理标签: {new_tag.name}, 子分类: {subcategory_key}")
+                    print(f"🔍 [调试] 可用子分类: {list(dimension_data['subcategories'].keys())}")
+                
                 if subcategory_key in dimension_data["subcategories"]:
                     subcategory_data = dimension_data["subcategories"][subcategory_key]
                     active_tags = subcategory_data["active_tags"]
+                else:
+                    # 🆕 如果子分类不存在，自动创建（防止标签丢失）
+                    if debug_mode:
+                        print(f"⚠️ [调试] 子分类 '{subcategory_key}' 不存在，自动创建")
                     
-                    # 对每个二级标签进行冲突检测
-                    if enable_conflict_detection and len(active_tags) > 0:
-                        resolutions = self.conflict_resolver.resolve_conflicts(
-                            f"{dimension_name}-{subcategory_key}", active_tags, [new_tag]
+                    # 尝试获取子分类的中文名称
+                    extractor = TagExtractor(self.user_id)
+                    subcategory_name = "未知子分类"
+                    
+                    # 从标签提取器的定义中查找对应的中文名
+                    for dim_key, dim_config in extractor.tag_categories.items():
+                        if dim_key == new_tag.category:
+                            subcategories = dim_config.get("subcategories", {})
+                            subcategory_name = subcategories.get(subcategory_key, f"未知子分类-{subcategory_key}")
+                            break
+                    
+                    # 创建新的子分类结构
+                    dimension_data["subcategories"][subcategory_key] = {
+                        "subcategory_name": subcategory_name,
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    }
+                    subcategory_data = dimension_data["subcategories"][subcategory_key]
+                    active_tags = subcategory_data["active_tags"]
+                    
+                    if debug_mode:
+                        print(f"✅ [调试] 已创建子分类: {subcategory_key} ({subcategory_name})")
+                
+                # 🔧 修复：将冲突检测和标签更新逻辑移到 if/else 外面
+                # 对每个二级标签进行冲突检测
+                if enable_conflict_detection and len(active_tags) > 0:
+                    resolutions = self.conflict_resolver.resolve_conflicts(
+                        f"{dimension_name}-{subcategory_key}", active_tags, [new_tag]
+                    )
+                    
+                    if resolutions:
+                        updated_tags, conflict_records = self.conflict_resolver.apply_resolutions(
+                            active_tags, resolutions
                         )
+                        subcategory_data["active_tags"] = updated_tags
                         
-                        if resolutions:
-                            updated_tags, conflict_records = self.conflict_resolver.apply_resolutions(
-                                active_tags, resolutions
-                            )
-                            subcategory_data["active_tags"] = updated_tags
-                            
-                            # 记录冲突历史
-                            if "conflict_history" not in subcategory_data:
-                                subcategory_data["conflict_history"] = []
-                            subcategory_data["conflict_history"].extend(conflict_records)
-                    
-                    # 更新或添加标签到对应的二级分类
-                    self._update_subcategory_tag(subcategory_data, new_tag)
+                        # 记录冲突历史
+                        if "conflict_history" not in subcategory_data:
+                            subcategory_data["conflict_history"] = []
+                        subcategory_data["conflict_history"].extend(conflict_records)
+                
+                # 更新或添加标签到对应的二级分类
+                self._update_subcategory_tag(subcategory_data, new_tag)
         else:
             # 兼容旧的一级标签结构
             active_tags = dimension_data.get("active_tags", [])

@@ -161,8 +161,9 @@ def _get_standardized_user_profile(user_id: str):
             })
         
         return {
-            'active_dimensions': active_dimensions,
-            'emotional_health_index': user_tags.get('emotional_health_index', 
+            'tag_dimensions': dimensions,  # 🔧 修复：直接返回tag_dimensions结构
+            'active_dimensions': active_dimensions,  # 保留向后兼容
+            'emotional_health_index': user_tags.get('emotional_health_index',
                                                    user_tags.get('computed_metrics', {}).get('emotional_health_index', 0.5)),
             'profile_maturity': user_tags.get('profile_maturity',
                                             user_tags.get('computed_metrics', {}).get('overall_profile_maturity', 0.0))
@@ -221,24 +222,144 @@ def get_profile():
             "interests_hobbies": {
                 "dimension_name": "兴趣爱好标签",
                 "subcategories": {
-                    "entertainment": {
-                        "subcategory_name": "娱乐爱好",
+                    "art_creation": {
+                        "subcategory_name": "文艺创作类",
                         "active_tags": [],
                         "dominant_tag": None,
                         "dimension_weight": 0.0,
                         "stability_score": 0.0,
                         "conflict_history": []
                     },
-                    "sports": {
-                        "subcategory_name": "运动爱好",
+                    "handcraft_diy": {
+                        "subcategory_name": "手工DIY类",
                         "active_tags": [],
                         "dominant_tag": None,
                         "dimension_weight": 0.0,
                         "stability_score": 0.0,
                         "conflict_history": []
                     },
-                    "learning_career": {
-                        "subcategory_name": "学习与职业相关爱好",
+                    "music_appreciation": {
+                        "subcategory_name": "音乐欣赏类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "music_performance": {
+                        "subcategory_name": "音乐演奏类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "film_tv_appreciation": {
+                        "subcategory_name": "影视欣赏类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "ball_sports": {
+                        "subcategory_name": "球类运动类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "sports_watching": {
+                        "subcategory_name": "运动比赛欣赏类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "extreme_sports": {
+                        "subcategory_name": "极限运动类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "health_fitness": {
+                        "subcategory_name": "养生锻炼身体类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "pet_keeping": {
+                        "subcategory_name": "饲养宠物类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "home_cooking": {
+                        "subcategory_name": "家常菜烹饪类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "baking": {
+                        "subcategory_name": "烘焙类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "food_exploration": {
+                        "subcategory_name": "美食探店类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "offline_socializing": {
+                        "subcategory_name": "线下聚会社交类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "home_design": {
+                        "subcategory_name": "家装设计类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "knowledge_learning": {
+                        "subcategory_name": "知识学习类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "collecting_appreciation": {
+                        "subcategory_name": "收藏鉴赏类",
+                        "active_tags": [],
+                        "dominant_tag": None,
+                        "dimension_weight": 0.0,
+                        "stability_score": 0.0,
+                        "conflict_history": []
+                    },
+                    "life_experience": {
+                        "subcategory_name": "体验生活类",
                         "active_tags": [],
                         "dominant_tag": None,
                         "dimension_weight": 0.0,

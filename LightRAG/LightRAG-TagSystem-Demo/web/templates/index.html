@@ -1491,9 +1491,24 @@
                     key: 'interests_hobbies', 
                     name: '兴趣爱好标签',
                     subcategories: {
-                        'entertainment': '娱乐爱好',
-                        'sports': '运动爱好',
-                        'learning_career': '学习与职业相关爱好'
+                        'art_creation': '文艺创作类',
+                        'handcraft_diy': '手工DIY类',
+                        'music_appreciation': '音乐欣赏类',
+                        'music_performance': '音乐演奏类',
+                        'film_tv_appreciation': '影视欣赏类',
+                        'ball_sports': '球类运动类',
+                        'sports_watching': '运动比赛欣赏类',
+                        'extreme_sports': '极限运动类',
+                        'health_fitness': '养生锻炼身体类',
+                        'pet_keeping': '饲养宠物类',
+                        'home_cooking': '家常菜烹饪类',
+                        'baking': '烘焙类',
+                        'food_exploration': '美食探店类',
+                        'offline_socializing': '线下聚会社交类',
+                        'home_design': '家装设计类',
+                        'knowledge_learning': '知识学习类',
+                        'collecting_appreciation': '收藏鉴赏类',
+                        'life_experience': '体验生活类'
                     }
                 },
                 { 
@@ -2255,9 +2270,24 @@
                     key: 'interests_hobbies', 
                     name: '兴趣爱好标签',
                     subcategories: {
-                        'entertainment': '娱乐爱好',
-                        'sports': '运动爱好',
-                        'learning_career': '学习与职业相关爱好'
+                        'art_creation': '文艺创作类',
+                        'handcraft_diy': '手工DIY类',
+                        'music_appreciation': '音乐欣赏类',
+                        'music_performance': '音乐演奏类',
+                        'film_tv_appreciation': '影视欣赏类',
+                        'ball_sports': '球类运动类',
+                        'sports_watching': '运动比赛欣赏类',
+                        'extreme_sports': '极限运动类',
+                        'health_fitness': '养生锻炼身体类',
+                        'pet_keeping': '饲养宠物类',
+                        'home_cooking': '家常菜烹饪类',
+                        'baking': '烘焙类',
+                        'food_exploration': '美食探店类',
+                        'offline_socializing': '线下聚会社交类',
+                        'home_design': '家装设计类',
+                        'knowledge_learning': '知识学习类',
+                        'collecting_appreciation': '收藏鉴赏类',
+                        'life_experience': '体验生活类'
                     }
                 },
                 { 
@@ -2340,9 +2370,24 @@
                     key: 'interests_hobbies', 
                     name: '兴趣爱好标签',
                     subcategories: {
-                        'entertainment': '娱乐爱好',
-                        'sports': '运动爱好',
-                        'learning_career': '学习与职业相关爱好'
+                        'art_creation': '文艺创作类',
+                        'handcraft_diy': '手工DIY类',
+                        'music_appreciation': '音乐欣赏类',
+                        'music_performance': '音乐演奏类',
+                        'film_tv_appreciation': '影视欣赏类',
+                        'ball_sports': '球类运动类',
+                        'sports_watching': '运动比赛欣赏类',
+                        'extreme_sports': '极限运动类',
+                        'health_fitness': '养生锻炼身体类',
+                        'pet_keeping': '饲养宠物类',
+                        'home_cooking': '家常菜烹饪类',
+                        'baking': '烘焙类',
+                        'food_exploration': '美食探店类',
+                        'offline_socializing': '线下聚会社交类',
+                        'home_design': '家装设计类',
+                        'knowledge_learning': '知识学习类',
+                        'collecting_appreciation': '收藏鉴赏类',
+                        'life_experience': '体验生活类'
                     }
                 },
                 { 
@@ -2356,8 +2401,48 @@
             ];
             
             // 处理新的二级标签结构或向后兼容
-            if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
-                // 处理从后端获取的标准化数据格式
+            if (profile.tag_dimensions) {
+                // 🔧 修复：处理新的tag_dimensions结构
+                allDimensions.forEach(dimensionDef => {
+                    const dimensionData = profile.tag_dimensions[dimensionDef.key];
+                    
+                    if (dimensionData && dimensionData.subcategories) {
+                        html += `<div class="profile-dimension">`;
+                        html += `<h3 class="dimension-title">${dimensionData.dimension_name || dimensionDef.name}</h3>`;
+                        
+                        // 遍历所有子分类
+                        Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
+                            const subcategoryData = dimensionData.subcategories[subKey];
+                            
+                            if (subcategoryData && subcategoryData.active_tags && subcategoryData.active_tags.length > 0) {
+                                html += `<div class="profile-subcategory">`;
+                                html += `<h4 class="subcategory-title">${subcategoryData.subcategory_name || subName}</h4>`;
+                                html += `<div class="profile-tags">`;
+                                
+                                hasAnyTags = true;
+                                subcategoryData.active_tags.forEach(tag => {
+                                    const tagName = tag.tag_name || tag.name || '';
+                                    const confidence = tag.avg_confidence || tag.confidence || 0;
+                                    const isNew = isNewTag(tagName, dimensionDef.key);
+                                    const newTagClass = isNew ? ' new-tag' : '';
+                                    html += `<span class="profile-tag clickable${newTagClass}" 
+                                                  onclick="showTagTrace('${tagName}')" 
+                                                  title="点击查看标签溯源"
+                                                  data-category="${dimensionDef.key}"
+                                                  data-subcategory="${subKey}">
+                                        ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                    </span>`;
+                                });
+                                
+                                html += `</div></div>`;
+                            }
+                        });
+                        
+                        html += `</div>`;
+                    }
+                });
+            } else if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
+                // 向后兼容：处理旧的active_dimensions格式
                 allDimensions.forEach(dimensionDef => {
                     let currentDimension = profile.active_dimensions.find(d => 
                         d.dimension === dimensionDef.key || 

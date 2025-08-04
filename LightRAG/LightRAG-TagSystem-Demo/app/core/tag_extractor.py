@@ -235,19 +235,21 @@ class TagExtractor:
             
             json_str = json_match.group(0)
             
-            # 🔧 修复：处理不完整的JSON响应
-            try:
-                tag_data = json.loads(json_str)
-            except json.JSONDecodeError as e:
-                print(f"⚠️ JSON解析失败，尝试修复: {e}")
-                # 尝试通过手动解析获取有效的标签部分
-                tag_data = self._parse_incomplete_json(json_str)
-                if tag_data:
-                    print("✅ 手动解析JSON成功")
-                else:
-                    print(f"❌ 手动解析JSON失败")
+            # 🔧 优先使用手动解析，避免JSON格式问题
+            print("🔧 优先使用手动解析JSON...")
+            tag_data = self._parse_incomplete_json(json_str)
+            
+            if not tag_data:
+                print("⚠️ 手动解析失败，尝试标准JSON解析...")
+                try:
+                    tag_data = json.loads(json_str)
+                    print("✅ 标准JSON解析成功")
+                except json.JSONDecodeError as e:
+                    print(f"❌ 所有解析方法都失败: {e}")
                     print(f"原始响应: {response}")
                     return {}
+            else:
+                print("✅ 手动解析JSON成功")
             
             parsed_tags = {}
             # 处理新的二级标签结构
@@ -402,35 +404,65 @@ class TagExtractor:
             return json_str
     
     def _parse_incomplete_json(self, json_str: str) -> Dict:
-        """手动解析不完整的JSON，提取有效的标签数据"""
+        """手动解析不完整的JSON，提取有效的标签数据 - 增强版"""
         try:
-            # 移除markdown标记
+            # 移除markdown标记和多余空白
             json_str = json_str.replace('```json', '').replace('```', '').strip()
             
             # 使用正则表达式提取各个标签分类
             result = {}
             
-            # 提取基本人口统计学标签
-            demo_match = re.search(r'"基本人口统计学标签":\s*\{([^}]*)\}', json_str, re.DOTALL)
-            if demo_match:
-                demo_content = demo_match.group(1)
-                result["基本人口统计学标签"] = self._parse_category_content(demo_content)
-                print("✅ 提取基本人口统计学标签")
+            # 🔧 更鲁棒的提取基本人口统计学标签
+            demo_patterns = [
+                r'"基本人口统计学标签":\s*\{([^}]*)\}',  # 完整匹配
+                r'"基本人口统计学标签":\s*\{(.*?)(?="兴趣爱好标签"|"情绪与情感状态标签"|$)'  # 截断匹配
+            ]
             
-            # 提取兴趣爱好标签
-            interest_match = re.search(r'"兴趣爱好标签":\s*\{(.*?)(?=\s*"情绪与情感状态标签"|$)', json_str, re.DOTALL)
-            if interest_match:
-                interest_content = interest_match.group(1).rstrip(', \n\r\t}')
-                result["兴趣爱好标签"] = self._parse_hobby_content(interest_content)
-                print("✅ 提取兴趣爱好标签")
+            for pattern in demo_patterns:
+                demo_match = re.search(pattern, json_str, re.DOTALL)
+                if demo_match:
+                    demo_content = demo_match.group(1).rstrip(', \n\r\t}')
+                    parsed_demo = self._parse_category_content(demo_content)
+                    if parsed_demo:
+                        result["基本人口统计学标签"] = parsed_demo
+                        print("✅ 提取基本人口统计学标签")
+                        break
             
-            # 提取情绪与情感状态标签（可能不完整）
-            emotion_match = re.search(r'"情绪与情感状态标签":\s*\{([^}]*)\}', json_str, re.DOTALL)
-            if emotion_match:
-                emotion_content = emotion_match.group(1)
-                result["情绪与情感状态标签"] = self._parse_category_content(emotion_content)
-                print("✅ 提取情绪与情感状态标签")
+            # 🔧 更鲁棒的提取兴趣爱好标签
+            interest_patterns = [
+                r'"兴趣爱好标签":\s*\{(.*?)\}(?=\s*,\s*"情绪与情感状态标签")',  # 完整匹配
+                r'"兴趣爱好标签":\s*\{(.*?)(?=\s*"情绪与情感状态标签"|$)',  # 截断匹配
+                r'"兴趣爱好标签":\s*\{([^}]*(?:\}[^}]*)*)'  # 复杂嵌套匹配
+            ]
             
+            for pattern in interest_patterns:
+                interest_match = re.search(pattern, json_str, re.DOTALL)
+                if interest_match:
+                    interest_content = interest_match.group(1).rstrip(', \n\r\t}')
+                    parsed_interest = self._parse_hobby_content(interest_content)
+                    if parsed_interest:
+                        result["兴趣爱好标签"] = parsed_interest
+                        print("✅ 提取兴趣爱好标签")
+                        break
+            
+            # 🔧 更鲁棒的提取情绪与情感状态标签
+            emotion_patterns = [
+                r'"情绪与情感状态标签":\s*\{([^}]*)\}',  # 完整匹配
+                r'"情绪与情感状态标签":\s*\{(.*?)(?=\s*$)',  # 截断匹配
+                r'"情绪与情感状态标签":\s*\{([^}]*)'  # 不完整匹配
+            ]
+            
+            for pattern in emotion_patterns:
+                emotion_match = re.search(pattern, json_str, re.DOTALL)
+                if emotion_match:
+                    emotion_content = emotion_match.group(1).rstrip(', \n\r\t}')
+                    parsed_emotion = self._parse_category_content(emotion_content)
+                    if parsed_emotion:
+                        result["情绪与情感状态标签"] = parsed_emotion
+                        print("✅ 提取情绪与情感状态标签")
+                        break
+            
+            print(f"🎯 手动解析结果: 成功提取 {len(result)} 个分类")
             return result
             
         except Exception as e:
@@ -462,7 +494,7 @@ class TagExtractor:
         return result
     
     def _parse_hobby_content(self, content: str) -> Dict:
-        """特殊处理兴趣爱好标签内容"""
+        """特殊处理兴趣爱好标签内容 - 增强版"""
         result = {}
         
         # 定义所有可能的子分类
@@ -474,26 +506,56 @@ class TagExtractor:
         ]
         
         for subcategory in subcategories:
-            # 查找该子分类的内容
-            pattern = f'"{subcategory}":\\s*\\[(.*?)\\]'
-            match = re.search(pattern, content, re.DOTALL)
-            if match:
-                tags_content = match.group(1)
-                tags = []
-                if tags_content.strip():
-                    # 提取标签信息
-                    tag_pattern = r'\{\s*"tag":\s*"([^"]+)"\s*,\s*"confidence":\s*([0-9.]+)\s*,\s*"evidence":\s*"([^"]+)"\s*\}'
-                    tag_matches = re.findall(tag_pattern, tags_content)
-                    for tag_name, confidence, evidence in tag_matches:
-                        tags.append({
-                            "tag": tag_name,
-                            "confidence": float(confidence),
-                            "evidence": evidence
-                        })
-                        print(f"🎯 提取到兴趣标签: {tag_name} -> {subcategory} (置信度: {confidence})")
-                result[subcategory] = tags
-            else:
-                result[subcategory] = []
+            # 🔧 使用多种模式匹配，提高成功率
+            patterns = [
+                f'"{subcategory}":\\s*\\[(.*?)\\]',  # 标准模式
+                f'"{subcategory}":\\s*\\[(.*?)(?=\\s*,\\s*"|\\s*\\}}|$)',  # 截断模式
+                f'"{subcategory}":\\s*\\[([^\\]]*)'  # 不完整模式
+            ]
+            
+            tags = []
+            matched = False
+            
+            for pattern in patterns:
+                match = re.search(pattern, content, re.DOTALL)
+                if match:
+                    tags_content = match.group(1).rstrip(', \n\r\t]')
+                    
+                    if tags_content.strip():
+                        # 🔧 更鲁棒的标签提取
+                        tag_patterns = [
+                            r'\{\s*"tag":\s*"([^"]+)"\s*,\s*"confidence":\s*([0-9.]+)\s*,\s*"evidence":\s*"([^"]+)"\s*\}',  # 完整格式
+                            r'\{\s*"tag":\s*"([^"]+)"\s*,\s*"confidence":\s*([0-9.]+)\s*,\s*"evidence":\s*"([^"]*)"?\s*(?:\}|$)',  # 不完整格式
+                            r'\{\s*"tag":\s*"([^"]+)"\s*,\s*"confidence":\s*([0-9.]+)'  # 最简格式
+                        ]
+                        
+                        for tag_pattern in tag_patterns:
+                            tag_matches = re.findall(tag_pattern, tags_content)
+                            if tag_matches:
+                                for match_tuple in tag_matches:
+                                    if len(match_tuple) >= 2:
+                                        tag_name = match_tuple[0]
+                                        confidence = match_tuple[1]
+                                        evidence = match_tuple[2] if len(match_tuple) > 2 else ""
+                                        
+                                        tags.append({
+                                            "tag": tag_name,
+                                            "confidence": float(confidence),
+                                            "evidence": evidence
+                                        })
+                                        print(f"🎯 提取到兴趣标签: {tag_name} -> {subcategory} (置信度: {confidence})")
+                                matched = True
+                                break
+                    
+                    if matched or not tags_content.strip():
+                        matched = True
+                        break
+            
+            result[subcategory] = tags
+        
+        # 统计提取结果
+        total_tags = sum(len(tags) for tags in result.values())
+        print(f"📊 兴趣爱好标签提取完成: {total_tags} 个标签分布在 {len([k for k, v in result.items() if v])} 个子分类中")
         
         return result
     

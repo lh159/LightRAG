@@ -267,27 +267,57 @@ class ResponseGenerator:
     
     def _build_response_prompt(self, query: str, knowledge: str, user_tags: Dict, 
                              strategy: Dict, context: Dict = None) -> str:
-        """构建个性化回应prompt"""
+        """构建高度个性化的精准回应prompt"""
         
-        # 提取关键用户特征
-        profile_summary = self._extract_profile_summary(user_tags)
+        # 提取详细的用户特征分析
+        detailed_profile = self._extract_detailed_profile_analysis(user_tags)
         
-        prompt = f"""你是一个温暖的情感陪伴助手，请基于以下信息生成个性化回应。
+        # 构建上下文信息
+        context_section = self._build_context_section(context, query)
+        
+        # 构建策略指导
+        strategy_guidance = self._build_strategy_guidance(strategy, user_tags)
+        
+        # 构建个性化适配指令
+        personalization_instructions = self._build_personalization_instructions(user_tags, query)
+        
+        # 构建回应质量要求
+        quality_requirements = self._build_quality_requirements(strategy, user_tags)
+        
+        prompt = f"""# 角色定义
+你是一位专业的情感陪伴AI助手，具有深度共情能力和个性化交流技能。你的使命是为每位用户提供最贴心、最契合其个性特征的回应。
 
-用户问题: "{query}"
+# 当前交流情境
+## 用户提问
+"{query}"
 
-相关知识:
-{knowledge}
+{context_section}
 
-用户特征:
-{profile_summary}
+## 相关知识库信息
+{knowledge if knowledge.strip() else "暂无直接相关的知识库信息，请基于常识和用户特征进行回应。"}
 
-回应要求:
-- 语气风格: {strategy.get('response_tone', 'warm')}
-- 回应风格: {strategy.get('response_style', 'balanced')}  
-- 情感适配: {strategy.get('emotional_adaptation', 'neutral')}
+# 用户深度画像分析
+{detailed_profile}
 
-请生成一个200字以内的个性化回应，要体现出对用户特征的理解和关怀。使用中文回复。"""
+# 个性化策略指导
+{strategy_guidance}
+
+# 个性化适配要求
+{personalization_instructions}
+
+# 回应质量标准
+{quality_requirements}
+
+# 输出要求
+请严格按照以上分析生成一个高质量的个性化回应：
+1. 字数控制在200字之内
+2. 必须体现对用户个性特征的深度理解
+3. 语言风格要与用户的特征高度匹配
+4. 内容要有温度、有深度、有针对性
+5. 如果涉及专业话题，要结合用户的认知水平调整表达方式
+6. 必须使用中文回复
+
+现在请生成回应："""
         
         return prompt
     
@@ -333,6 +363,201 @@ class ResponseGenerator:
                 response = response[:97] + "..."
         
         return response.strip()
+    
+    def _extract_detailed_profile_analysis(self, user_tags: Dict) -> str:
+        """提取详细的用户画像分析"""
+        dimensions = user_tags.get("tag_dimensions", {})
+        analysis_parts = []
+        
+        # 分析各个维度
+        for dim_key, dim_data in dimensions.items():
+            if dim_data.get("overall_weight", dim_data.get("dimension_weight", 0)) > 0.1:
+                dim_name = dim_data.get("dimension_name", dim_key)
+                analysis_parts.append(f"\n## {dim_name}")
+                
+                # 处理二级标签结构
+                if dim_data.get('subcategories'):
+                    for sub_key, subcategory_data in dim_data['subcategories'].items():
+                        active_tags = subcategory_data.get("active_tags", [])
+                        if active_tags:
+                            sub_name = subcategory_data.get("subcategory_name", sub_key)
+                            analysis_parts.append(f"### {sub_name}")
+                            
+                            # 按权重排序，显示详细信息
+                            sorted_tags = sorted(active_tags, key=lambda x: x.get("current_weight", 0), reverse=True)[:3]
+                            for tag in sorted_tags:
+                                tag_name = tag.get("tag_name", "")
+                                confidence = tag.get("avg_confidence", 0)
+                                weight = tag.get("current_weight", 0)
+                                evidence = tag.get("evidence", "")[:100]
+                                
+                                analysis_parts.append(f"- **{tag_name}** (置信度: {confidence:.2f}, 权重: {weight:.2f})")
+                                if evidence:
+                                    analysis_parts.append(f"  依据: {evidence}...")
+                elif dim_data.get("active_tags"):
+                    # 兼容旧结构
+                    sorted_tags = sorted(dim_data.get("active_tags", []), 
+                                       key=lambda x: x.get("current_weight", 0), reverse=True)[:3]
+                    for tag in sorted_tags:
+                        tag_name = tag.get("tag_name", "")
+                        confidence = tag.get("avg_confidence", 0)
+                        weight = tag.get("current_weight", 0)
+                        analysis_parts.append(f"- **{tag_name}** (置信度: {confidence:.2f}, 权重: {weight:.2f})")
+        
+        if not analysis_parts:
+            return "用户画像数据较少，建议采用通用友好的交流方式，通过对话逐步了解用户特征。"
+        
+        return "\n".join(analysis_parts)
+    
+    def _build_context_section(self, context: Dict, query: str) -> str:
+        """构建上下文信息段落"""
+        if not context:
+            return ""
+        
+        context_parts = []
+        
+        # 对话历史
+        if context.get("conversation_history"):
+            recent_messages = context["conversation_history"][-3:]
+            context_parts.append("## 近期对话上下文")
+            for i, msg in enumerate(recent_messages, 1):
+                context_parts.append(f"{i}. {msg}")
+        
+        # 当前会话信息
+        if context.get("session_info"):
+            session_info = context["session_info"]
+            context_parts.append("## 会话信息")
+            if session_info.get("duration"):
+                context_parts.append(f"- 对话时长: {session_info['duration']}")
+            if session_info.get("message_count"):
+                context_parts.append(f"- 消息数量: {session_info['message_count']}")
+        
+        return "\n".join(context_parts) if context_parts else ""
+    
+    def _build_strategy_guidance(self, strategy: Dict, user_tags: Dict) -> str:
+        """构建策略指导"""
+        guidance_parts = []
+        
+        # 语气风格指导
+        tone = strategy.get('response_tone', 'warm')
+        tone_guidance = {
+            'warm': '采用温暖亲切的语气，让用户感受到关怀和理解',
+            'gentle': '使用轻柔温和的表达，避免任何可能造成压力的词汇',
+            'upbeat': '保持积极乐观的语调，传递正能量和鼓励',
+            'professional': '采用专业但友好的语气，体现专业性的同时保持亲和力',
+            'casual': '使用轻松随意的语气，营造轻松愉快的对话氛围'
+        }
+        guidance_parts.append(f"**语气风格**: {tone_guidance.get(tone, '采用温和友好的语气')}")
+        
+        # 回应风格指导
+        style = strategy.get('response_style', 'balanced')
+        style_guidance = {
+            'balanced': '保持内容的平衡性，既有深度又易于理解',
+            'concise': '回应简洁明了，直击要点，避免冗长',
+            'detailed': '提供详细深入的回应，充分展开话题',
+            'supportive': '重点提供支持和鼓励，强化用户的信心'
+        }
+        guidance_parts.append(f"**回应风格**: {style_guidance.get(style, '采用平衡的回应风格')}")
+        
+        # 情感适配指导
+        emotional = strategy.get('emotional_adaptation', 'neutral')
+        emotional_guidance = {
+            'neutral': '保持情感中性，根据用户情绪进行自然回应',
+            'supportive': '提供情感支持，给予用户鼓励和安慰',
+            'encouraging': '积极鼓励用户，激发其正面情绪',
+            'empathetic': '深度共情，充分理解并回应用户的情感需求'
+        }
+        guidance_parts.append(f"**情感适配**: {emotional_guidance.get(emotional, '保持情感适度')}")
+        
+        # 内容过滤指导
+        if strategy.get('content_filters'):
+            filters = strategy['content_filters'][:3]
+            guidance_parts.append(f"**内容注意**: 避免提及 {', '.join(filters)} 等可能引起用户不适的话题")
+        
+        # 话题偏好指导
+        if strategy.get('boost_topics'):
+            topics = strategy['boost_topics'][:3]
+            guidance_parts.append(f"**话题偏好**: 可适当引入 {', '.join(topics)} 等用户感兴趣的话题")
+        
+        return "\n".join(guidance_parts)
+    
+    def _build_personalization_instructions(self, user_tags: Dict, query: str) -> str:
+        """构建个性化适配指令"""
+        instructions = []
+        dimensions = user_tags.get("tag_dimensions", {})
+        
+        # 基于兴趣爱好的适配
+        interests = dimensions.get("interests_hobbies", {})
+        if interests.get("overall_weight", 0) > 0.3:
+            instructions.append("**兴趣适配**: 结合用户的兴趣爱好，使用相关的比喻、例子或话题引导")
+            
+            # 分析具体兴趣类型
+            if interests.get('subcategories'):
+                active_interests = []
+                for sub_key, sub_data in interests['subcategories'].items():
+                    if sub_data.get('active_tags'):
+                        sub_name = sub_data.get('subcategory_name', sub_key)
+                        active_interests.append(sub_name)
+                
+                if active_interests:
+                    instructions.append(f"  - 用户活跃兴趣领域: {', '.join(active_interests[:3])}")
+        
+        # 基于情感状态的适配
+        emotional = dimensions.get("emotional_state", {})
+        if emotional.get("overall_weight", 0) > 0.3:
+            instructions.append("**情感适配**: 根据用户当前的情感状态调整回应的情感色彩和支持程度")
+            
+            # 分析具体情感状态
+            if emotional.get('subcategories'):
+                current_mood = emotional.get('subcategories', {}).get('current_mood', {})
+                if current_mood.get('active_tags'):
+                    mood_tags = [tag.get('tag_name', '') for tag in current_mood['active_tags'][:2]]
+                    instructions.append(f"  - 当前情绪倾向: {', '.join(mood_tags)}")
+        
+        # 基于人口统计的适配
+        demo = dimensions.get("demographic_info", {})
+        if demo.get("overall_weight", 0) > 0.3:
+            instructions.append("**表达适配**: 根据用户的年龄、背景等特征调整表达方式和用词选择")
+        
+        # 查询类型适配
+        query_lower = query.lower()
+        if any(word in query_lower for word in ['怎么', '如何', '怎样']):
+            instructions.append("**回应类型**: 用户寻求方法指导，提供具体可行的建议和步骤")
+        elif any(word in query_lower for word in ['为什么', '原因', '为何']):
+            instructions.append("**回应类型**: 用户寻求原因解释，提供深入的分析和解释")
+        elif any(word in query_lower for word in ['感觉', '心情', '情绪']):
+            instructions.append("**回应类型**: 用户表达情感，重点提供情感支持和共情")
+        
+        return "\n".join(instructions) if instructions else "**基础适配**: 采用温和友好的通用交流方式"
+    
+    def _build_quality_requirements(self, strategy: Dict, user_tags: Dict) -> str:
+        """构建回应质量要求"""
+        requirements = [
+            "**准确性**: 确保信息准确，避免误导用户",
+            "**相关性**: 回应内容必须与用户问题高度相关",
+            "**个性化**: 体现对用户个人特征的理解和尊重",
+            "**情感温度**: 传递温暖和关怀，让用户感受到被理解",
+            "**实用性**: 如果涉及建议，确保建议具体可行"
+        ]
+        
+        # 根据用户特征添加特殊要求
+        dimensions = user_tags.get("tag_dimensions", {})
+        
+        # 如果用户有敏感情绪标签
+        emotional = dimensions.get("emotional_state", {})
+        if emotional.get('subcategories'):
+            for sub_data in emotional['subcategories'].values():
+                for tag in sub_data.get('active_tags', []):
+                    if any(word in tag.get('tag_name', '') for word in ['敏感', '焦虑', '紧张']):
+                        requirements.append("**特别注意**: 用词谨慎，避免可能引起情绪波动的表达")
+                        break
+        
+        # 如果用户有学习相关兴趣
+        interests = dimensions.get("interests_hobbies", {})
+        if interests.get('subcategories', {}).get('knowledge_learning', {}).get('active_tags'):
+            requirements.append("**知识性**: 适当提供有价值的知识点，满足用户的学习需求")
+        
+        return "\n".join(requirements)
     
     def _get_profile_snapshot(self, user_tags: Dict) -> Dict:
         """获取用户画像快照 - 增强版，包含冲突处理信息"""

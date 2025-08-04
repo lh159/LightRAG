@@ -645,19 +645,19 @@ def parse_conversation_text(text):
         role = None
         content = line
         
-        # 文本格式: "用户:" 或 "助手:"
+        # 文本格式: "用户:" 或 "角色:"
         if line.startswith('用户:') or line.startswith('User:') or line.startswith('human:') or line.startswith('Human:'):
             role = 'user'
             content = line.split(':', 1)[1].strip()
-        elif line.startswith('助手:') or line.startswith('Assistant:') or line.startswith('AI:') or line.startswith('ai:'):
+        elif line.startswith('角色:') or line.startswith('助手:') or line.startswith('Assistant:') or line.startswith('AI:') or line.startswith('ai:'):
             role = 'assistant'
             content = line.split(':', 1)[1].strip()
         
-        # Markdown格式: "## 用户" 或 "## 助手"
+        # Markdown格式: "## 用户" 或 "## 角色"
         elif line.startswith('## 用户') or line.startswith('## User') or line.startswith('## Human'):
             role = 'user'
             content = ''
-        elif line.startswith('## 助手') or line.startswith('## Assistant') or line.startswith('## AI'):
+        elif line.startswith('## 角色') or line.startswith('## 助手') or line.startswith('## Assistant') or line.startswith('## AI'):
             role = 'assistant'
             content = ''
         

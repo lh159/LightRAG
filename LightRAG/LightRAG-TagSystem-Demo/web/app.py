@@ -645,13 +645,24 @@ def parse_conversation_text(text):
         role = None
         content = line
         
-        # 文本格式: "用户:" 或 "角色:"
-        if line.startswith('用户:') or line.startswith('User:') or line.startswith('human:') or line.startswith('Human:'):
+        # 文本格式: "用户:" 或 "角色:" (支持中英文冒号)
+        if (line.startswith('用户:') or line.startswith('用户：') or 
+            line.startswith('User:') or line.startswith('human:') or line.startswith('Human:')):
             role = 'user'
-            content = line.split(':', 1)[1].strip()
-        elif line.startswith('角色:') or line.startswith('助手:') or line.startswith('Assistant:') or line.startswith('AI:') or line.startswith('ai:'):
+            # 支持中英文冒号分割
+            if '：' in line:
+                content = line.split('：', 1)[1].strip()
+            else:
+                content = line.split(':', 1)[1].strip()
+        elif (line.startswith('角色:') or line.startswith('角色：') or 
+              line.startswith('助手:') or line.startswith('助手：') or 
+              line.startswith('Assistant:') or line.startswith('AI:') or line.startswith('ai:')):
             role = 'assistant'
-            content = line.split(':', 1)[1].strip()
+            # 支持中英文冒号分割
+            if '：' in line:
+                content = line.split('：', 1)[1].strip()
+            else:
+                content = line.split(':', 1)[1].strip()
         
         # Markdown格式: "## 用户" 或 "## 角色"
         elif line.startswith('## 用户') or line.startswith('## User') or line.startswith('## Human'):

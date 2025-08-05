@@ -1688,7 +1688,7 @@
                         updateProfile(data.user_profile);
                     }
                     
-                    // 显示提取结果
+                    // 显示提取结果和溯源信息
                     let resultMessage = '✅ 对话处理完成！\n\n';
                     if (data.extracted_tags && Object.keys(data.extracted_tags).length > 0) {
                         resultMessage += '📋 提取的标签：\n';
@@ -1699,11 +1699,32 @@
                         });
                     }
                     
+                    // 显示溯源信息
+                    if (data.tracing_info && data.tracing_info.total_triggers > 0) {
+                        resultMessage += `\n🔍 标签溯源信息：\n`;
+                        resultMessage += `• 总触发次数: ${data.tracing_info.total_triggers}\n`;
+                        resultMessage += `• 触发标签数: ${Object.keys(data.tracing_info.trigger_summary).length}\n`;
+                        
+                        // 显示每个标签的触发来源
+                        Object.values(data.tracing_info.trigger_summary).forEach(tagInfo => {
+                            resultMessage += `\n📌 ${tagInfo.tag_name} (${tagInfo.tag_category})：\n`;
+                            tagInfo.sources.forEach((source, idx) => {
+                                const truncatedText = source.text.length > 30 ? 
+                                    source.text.substring(0, 30) + '...' : source.text;
+                                resultMessage += `  ${idx + 1}. "${truncatedText}"\n`;
+                                if (source.evidence) {
+                                    resultMessage += `     证据: ${source.evidence}\n`;
+                                }
+                            });
+                        });
+                    }
+                    
                     if (data.knowledge_added) {
                         resultMessage += '\n📚 知识已成功添加到个人知识库！';
                     }
                     
-                    alert(resultMessage);
+                    // 使用更好的显示方式而不是alert
+                    showTracingResultModal(resultMessage, data.tracing_info);
                     closeKnowledgeModal();
                 } else {
                     alert('❌ 处理失败：' + (data.error || '未知错误'));
@@ -2576,6 +2597,224 @@
             // 初始化previousTags为空，这样第一次加载时所有标签都会被认为是新标签
             previousTags = {};
         });
+        // 显示溯源结果模态窗口
+        function showTracingResultModal(message, tracingInfo) {
+            // 创建模态窗口HTML
+            const modalHtml = `
+                <div id="tracingResultModal" class="knowledge-modal" style="display: block;">
+                    <div class="knowledge-modal-content" style="max-width: 800px;">
+                        <div class="knowledge-modal-header">
+                            <h2>🔍 对话分析与标签溯源结果</h2>
+                            <button class="close-btn" onclick="closeTracingResultModal()">&times;</button>
+                        </div>
+                        
+                        <div class="knowledge-modal-body" style="max-height: 600px; overflow-y: auto;">
+                            <div class="tracing-summary">
+                                <div class="summary-stats">
+                                    <div class="stat-item">
+                                        <div class="stat-value">${tracingInfo ? tracingInfo.total_triggers : 0}</div>
+                                        <div class="stat-label">总触发次数</div>
+                                    </div>
+                                    <div class="stat-item">
+                                        <div class="stat-value">${tracingInfo ? Object.keys(tracingInfo.trigger_summary).length : 0}</div>
+                                        <div class="stat-label">触发标签数</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${tracingInfo && tracingInfo.trigger_summary ? generateTracingDetails(tracingInfo.trigger_summary) : ''}
+                        </div>
+                        
+                        <div class="knowledge-modal-footer">
+                            <button class="btn-primary" onclick="closeTracingResultModal()">确定</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 添加到页面
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+        
+        // 生成溯源详情HTML
+        function generateTracingDetails(triggerSummary) {
+            let html = '<div class="tracing-details">';
+            html += '<h3>📌 标签触发详情</h3>';
+            
+            Object.values(triggerSummary).forEach(tagInfo => {
+                html += `
+                    <div class="tag-tracing-item">
+                        <div class="tag-header">
+                            <span class="tag-name">${tagInfo.tag_name}</span>
+                            <span class="tag-category">${tagInfo.tag_category}</span>
+                            <span class="trigger-count">${tagInfo.trigger_count}次触发</span>
+                        </div>
+                        <div class="tag-sources">
+                `;
+                
+                tagInfo.sources.forEach((source, idx) => {
+                    html += `
+                        <div class="source-item">
+                            <div class="source-index">${idx + 1}</div>
+                            <div class="source-content">
+                                <div class="source-text">"${source.text}"</div>
+                                ${source.evidence ? `<div class="source-evidence">证据: ${source.evidence}</div>` : ''}
+                                ${source.confidence_change ? `<div class="confidence-change">置信度变化: ${source.confidence_change > 0 ? '+' : ''}${(source.confidence_change * 100).toFixed(1)}%</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            return html;
+        }
+        
+        // 关闭溯源结果模态窗口
+        function closeTracingResultModal() {
+            const modal = document.getElementById('tracingResultModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // 添加溯源结果模态窗口的样式
+        const tracingModalStyles = `
+            <style>
+                .tracing-summary {
+                    margin-bottom: 20px;
+                    padding: 15px;
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                }
+                
+                .summary-stats {
+                    display: flex;
+                    gap: 20px;
+                    justify-content: center;
+                }
+                
+                .stat-item {
+                    text-align: center;
+                }
+                
+                .stat-value {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #007bff;
+                }
+                
+                .stat-label {
+                    font-size: 12px;
+                    color: #666;
+                    margin-top: 5px;
+                }
+                
+                .tracing-details h3 {
+                    margin-bottom: 15px;
+                    color: #333;
+                }
+                
+                .tag-tracing-item {
+                    margin-bottom: 20px;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 8px;
+                    overflow: hidden;
+                }
+                
+                .tag-header {
+                    background: #f5f5f5;
+                    padding: 10px 15px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                
+                .tag-name {
+                    font-weight: bold;
+                    color: #333;
+                }
+                
+                .tag-category {
+                    background: #007bff;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                }
+                
+                .trigger-count {
+                    margin-left: auto;
+                    background: #28a745;
+                    color: white;
+                    padding: 2px 8px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                }
+                
+                .tag-sources {
+                    padding: 15px;
+                }
+                
+                .source-item {
+                    display: flex;
+                    margin-bottom: 15px;
+                    padding-bottom: 15px;
+                    border-bottom: 1px solid #f0f0f0;
+                }
+                
+                .source-item:last-child {
+                    border-bottom: none;
+                    margin-bottom: 0;
+                    padding-bottom: 0;
+                }
+                
+                .source-index {
+                    width: 24px;
+                    height: 24px;
+                    background: #007bff;
+                    color: white;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    font-weight: bold;
+                    margin-right: 12px;
+                    flex-shrink: 0;
+                }
+                
+                .source-content {
+                    flex: 1;
+                }
+                
+                .source-text {
+                    font-weight: 500;
+                    margin-bottom: 5px;
+                    color: #333;
+                }
+                
+                .source-evidence {
+                    font-size: 12px;
+                    color: #666;
+                    margin-bottom: 3px;
+                }
+                
+                .confidence-change {
+                    font-size: 12px;
+                    font-weight: bold;
+                    color: #28a745;
+                }
+            </style>
+        `;
+        
+        // 添加样式到页面
+        document.head.insertAdjacentHTML('beforeend', tracingModalStyles);
     </script>
 </body>
 </html>

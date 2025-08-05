@@ -499,22 +499,44 @@ def process_conversation():
                 "error": "无法解析对话文本，请检查格式"
             }), 400
         
-        # 初始化组件
-        tag_extractor = TagExtractor(str(user_id))
+        # 初始化组件 - 使用增强版标签提取器支持溯源
+        from app.core.enhanced_tag_extractor import EnhancedTagExtractor
+        enhanced_extractor = EnhancedTagExtractor(str(user_id))
         tag_manager = TagManager(str(user_id))
         response_generator = ResponseGenerator(str(user_id))
         lightrag = LightRAGEngine(str(user_id))
         
         all_extracted_tags = {}
+        all_trigger_records = []
         knowledge_added = False
         
+        # 生成会话ID用于溯源
+        session_id = str(uuid.uuid4())
+        
         # 处理每条用户消息
-        for message in conversation_messages:
+        for idx, message in enumerate(conversation_messages):
             if message['role'] == 'user':
                 try:
-                    # 提取标签
+                    # 生成消息ID
+                    message_id = f"{session_id}_msg_{idx}"
+                    
+                    # 提取标签并记录溯源信息
                     if extract_tags:
-                        extracted_tags = tag_extractor.extract_tags_from_text(message['content'])
+                        # 构建上下文信息
+                        context = {
+                            "source": "conversation_upload",
+                            "message_index": idx,
+                            "total_messages": len(conversation_messages),
+                            "conversation_context": "structured_text_analysis"
+                        }
+                        
+                        # 使用增强版提取器进行标签提取和溯源
+                        extracted_tags, trigger_records = enhanced_extractor.extract_tags_with_tracing(
+                            text=message['content'],
+                            context=context,
+                            session_id=session_id,
+                            message_id=message_id
+                        )
                         
                         # 合并标签结果
                         for dimension, tags in extracted_tags.items():
@@ -522,13 +544,16 @@ def process_conversation():
                                 all_extracted_tags[dimension] = []
                             all_extracted_tags[dimension].extend([tag.name for tag in tags])
                         
+                        # 收集触发记录
+                        all_trigger_records.extend(trigger_records)
+                        
                         # 更新标签
                         tag_manager.update_tags(extracted_tags)
                     
                     # 添加到知识库
                     lightrag.insert_knowledge(
                         f"用户消息: {message['content']}", 
-                        {"source": "conversation_upload", "timestamp": datetime.now().isoformat()}
+                        {"source": "conversation_upload", "timestamp": datetime.now().isoformat(), "message_id": message_id}
                     )
                     knowledge_added = True
                     
@@ -596,12 +621,39 @@ def process_conversation():
         for dimension in all_extracted_tags:
             all_extracted_tags[dimension] = list(set(all_extracted_tags[dimension]))
         
+        # 准备溯源信息
+        tracing_info = {
+            "session_id": session_id,
+            "total_triggers": len(all_trigger_records),
+            "trigger_summary": {}
+        }
+        
+        # 按标签分组触发记录
+        for trigger in all_trigger_records:
+            tag_key = f"{trigger.tag_category}.{trigger.tag_name}"
+            if tag_key not in tracing_info["trigger_summary"]:
+                tracing_info["trigger_summary"][tag_key] = {
+                    "tag_name": trigger.tag_name,
+                    "tag_category": trigger.tag_category,
+                    "trigger_count": 0,
+                    "sources": []
+                }
+            
+            tracing_info["trigger_summary"][tag_key]["trigger_count"] += 1
+            tracing_info["trigger_summary"][tag_key]["sources"].append({
+                "text": trigger.trigger_text,
+                "evidence": trigger.evidence,
+                "confidence_change": trigger.confidence_delta,
+                "message_id": trigger.message_id
+            })
+        
         return jsonify({
             "success": True,
             "extracted_tags": all_extracted_tags,
             "user_profile": user_profile,
             "knowledge_added": knowledge_added,
-            "processed_messages": len(conversation_messages)
+            "processed_messages": len(conversation_messages),
+            "tracing_info": tracing_info
         })
         
     except Exception as e:

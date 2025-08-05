@@ -9,6 +9,7 @@ from dataclasses import dataclass
 # 添加父目录到路径以便导入
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils.llm_client import LLMClient
+from core.tag_similarity_detector import TagSimilarityDetector
 
 @dataclass
 class TagInfo:
@@ -22,6 +23,7 @@ class TagExtractor:
     def __init__(self, user_id: str):
         self.user_id = user_id
         self.llm_client = LLMClient()
+        self.similarity_detector = TagSimilarityDetector()
         self.tag_categories = {
             "demographic_info": {
                 "name": "基本人口统计学标签",
@@ -86,7 +88,10 @@ class TagExtractor:
             # 融合结果
             final_tags = self._merge_tag_results(extracted_tags, behavior_tags)
             
-            return final_tags
+            # 🆕 应用标签标准化和相似性合并
+            standardized_tags = self._apply_tag_standardization(final_tags)
+            
+            return standardized_tags
             
         except Exception as e:
             print(f"标签提取错误: {e}")
@@ -610,3 +615,55 @@ class TagExtractor:
                     merged[category].append(tag)
         
         return merged
+    
+    def _apply_tag_standardization(self, tags: Dict[str, List[TagInfo]]) -> Dict[str, List[TagInfo]]:
+        """应用标签标准化和相似性合并"""
+        standardized_tags = {}
+        
+        for category, tag_list in tags.items():
+            if not tag_list:
+                continue
+            
+            # 对每个类别的标签进行标准化
+            standardized_list = []
+            
+            for tag in tag_list:
+                # 获取类别特定的规则
+                category_rules = self.similarity_detector.category_similarity_rules.get(category, {})
+                
+                # 标准化标签名称
+                standardized_name = self.similarity_detector._standardize_tag_name(tag.name, category_rules)
+                
+                # 如果标签名称发生了变化，创建新的TagInfo对象
+                if standardized_name != tag.name:
+                    standardized_tag = TagInfo(
+                        name=standardized_name,
+                        confidence=tag.confidence,
+                        evidence=f"标准化自: {tag.name} | {tag.evidence}",
+                        category=tag.category,
+                        subcategory=tag.subcategory
+                    )
+                    print(f"🔧 标签标准化: {tag.name} -> {standardized_name}")
+                else:
+                    standardized_tag = tag
+                
+                # 检查是否已有相同的标准化标签
+                existing_tag = None
+                for existing in standardized_list:
+                    if existing.name == standardized_tag.name and existing.subcategory == standardized_tag.subcategory:
+                        existing_tag = existing
+                        break
+                
+                if existing_tag:
+                    # 合并置信度（取更高的值）
+                    if standardized_tag.confidence > existing_tag.confidence:
+                        existing_tag.confidence = standardized_tag.confidence
+                        existing_tag.evidence = f"{existing_tag.evidence}; {standardized_tag.evidence}"
+                    print(f"🔄 合并相似标签: {standardized_tag.name} (置信度: {existing_tag.confidence:.2f})")
+                else:
+                    standardized_list.append(standardized_tag)
+            
+            if standardized_list:
+                standardized_tags[category] = standardized_list
+        
+        return standardized_tags

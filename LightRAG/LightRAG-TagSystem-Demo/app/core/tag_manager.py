@@ -9,6 +9,7 @@ from dataclasses import dataclass
 # 添加父目录到路径以便导入
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from core.tag_extractor import TagInfo, TagExtractor
+from core.tag_similarity_detector import TagSimilarityDetector
 
 # 内嵌冲突处理器类
 @dataclass
@@ -243,6 +244,9 @@ class TagManager:
         # 🆕 初始化冲突处理器（传递性能配置）
         self.conflict_resolver = TagConflictResolver()
         self.conflict_resolver.max_tags_for_temporal_check = self.performance_config.get('max_tags_for_temporal_check', 10)
+        
+        # 🆕 初始化相似性检测器
+        self.similarity_detector = TagSimilarityDetector()
         
         # 确保文件存在
         self._ensure_tag_files()
@@ -647,7 +651,61 @@ class TagManager:
         """更新二级分类中的标签"""
         active_tags = subcategory_data["active_tags"]
         
-        # 查找是否已存在相同标签
+        # 🆕 相似性检测和合并
+        if active_tags:
+            # 检测相似标签
+            similar_groups = self.similarity_detector.detect_similar_tags(active_tags, [new_tag])
+            
+            if similar_groups:
+                # 找到需要合并的标签组
+                for group in similar_groups:
+                    if new_tag.name in group.similar_tags or new_tag.name == group.primary_tag:
+                        # 检查是否已存在主要标签
+                        existing_primary_tag = None
+                        existing_similar_tag = None
+                        
+                        for tag in active_tags:
+                            if tag["tag_name"] == group.primary_tag:
+                                existing_primary_tag = tag
+                            elif tag["tag_name"] in group.similar_tags:
+                                existing_similar_tag = tag
+                        
+                        if existing_primary_tag:
+                            # 强化主要标签
+                            existing_primary_tag["evidence_count"] += 1
+                            existing_primary_tag["last_reinforced"] = datetime.now().isoformat()
+                            existing_primary_tag["total_confidence"] += new_tag.confidence
+                            existing_primary_tag["avg_confidence"] = existing_primary_tag["total_confidence"] / existing_primary_tag["evidence_count"]
+                            
+                            # 更新证据信息
+                            if "evidence" not in existing_primary_tag:
+                                existing_primary_tag["evidence"] = new_tag.evidence
+                            else:
+                                existing_primary_tag["evidence"] = f"{existing_primary_tag['evidence']}; {new_tag.evidence}"[:200] + "..."
+                            
+                            # 记录合并信息
+                            existing_primary_tag["merge_info"] = {
+                                "merged_from": new_tag.name,
+                                "merge_reason": group.merge_reason,
+                                "similarity_score": group.similarity_score,
+                                "merge_time": datetime.now().isoformat()
+                            }
+                            
+                            # 如果存在相似标签，将其移除（避免重复）
+                            if existing_similar_tag:
+                                active_tags.remove(existing_similar_tag)
+                            
+                            # 应用时间衰减
+                            self._apply_time_decay(active_tags)
+                            
+                            # 限制标签数量（保留权重最高的10个）
+                            if len(active_tags) > 10:
+                                active_tags.sort(key=lambda x: x.get("current_weight", x.get("avg_confidence", 0)), reverse=True)
+                                subcategory_data["active_tags"] = active_tags[:10]
+                            
+                            return  # 已合并，不需要进一步处理
+        
+        # 查找是否已存在完全相同的标签
         existing_tag = None
         for tag in active_tags:
             if tag["tag_name"] == new_tag.name:

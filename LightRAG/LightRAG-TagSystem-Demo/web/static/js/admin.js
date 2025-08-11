@@ -550,21 +550,46 @@ function closeModal() {
 
 // 加载标签数据
 async function loadTagsData() {
+    console.log('Loading detailed tags data...');
+    
     try {
         const token = localStorage.getItem('auth_token');
         
-        const response = await fetch('/api/user/admin/statistics', {
+        if (!token) {
+            console.error('No auth token found for tags');
+            return;
+        }
+        
+        // 获取详细标签分析数据
+        const response = await fetch('/api/user/admin/tags/analysis', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
         });
         
         if (response.ok) {
             const data = await response.json();
-            renderTagStats(data.statistics.tag_statistics || {});
+            console.log('Tags analysis data received:', data);
+            renderDetailedTagsAnalysis(data.analysis);
+        } else {
+            console.error('Failed to load tags data:', response.status);
+            // 回退到简单统计
+            const statsResponse = await fetch('/api/user/admin/statistics', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (statsResponse.ok) {
+                const statsData = await statsResponse.json();
+                renderTagStats(statsData.statistics.tag_statistics || {});
+            }
         }
+        
     } catch (error) {
         console.error('Error loading tags data:', error);
+        renderTagsError();
     }
 }
 
@@ -585,6 +610,205 @@ function renderTagStats(tagStats) {
                 <span class="tag-count">${count}</span>
             </div>
         `).join('');
+}
+
+// 渲染详细标签分析
+function renderDetailedTagsAnalysis(analysis) {
+    if (!analysis || !analysis.dimensions) {
+        renderTagsError();
+        return;
+    }
+    
+    // 更新标签统计概览
+    const statsContainer = document.getElementById('tagStatsList');
+    if (statsContainer) {
+        const dimensionStats = Object.entries(analysis.dimensions).map(([name, data]) => ({
+            name,
+            count: data.total_tags
+        }));
+        
+        statsContainer.innerHTML = dimensionStats.map(stat => `
+            <div class="tag-stat-item">
+                <span class="tag-name">${stat.name}</span>
+                <span class="tag-count">${stat.count}</span>
+            </div>
+        `).join('');
+    }
+    
+    // 渲染详细的维度分析
+    renderDimensionDetails(analysis.dimensions);
+    
+    // 渲染标签云
+    renderTagCloud(analysis.tag_cloud);
+    
+    // 渲染置信度分布
+    renderConfidenceDistribution(analysis.confidence_distribution);
+    
+    // 渲染用户画像摘要
+    renderUserProfilesSummary(analysis.user_profiles);
+}
+
+// 渲染维度详情
+function renderDimensionDetails(dimensions) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container) return;
+    
+    // 创建详细分析区域
+    let detailsContainer = document.getElementById('dimensionDetails');
+    if (!detailsContainer) {
+        detailsContainer = document.createElement('div');
+        detailsContainer.id = 'dimensionDetails';
+        detailsContainer.className = 'dimension-details';
+        container.appendChild(detailsContainer);
+    }
+    
+    const dimensionEntries = Object.entries(dimensions);
+    
+    detailsContainer.innerHTML = `
+        <h3>📊 维度详细分析</h3>
+        <div class="dimensions-grid">
+            ${dimensionEntries.map(([name, data]) => `
+                <div class="dimension-card">
+                    <div class="dimension-header">
+                        <h4>${name}</h4>
+                        <div class="dimension-stats">
+                            <span class="stat">标签数: ${data.total_tags}</span>
+                            <span class="stat">用户数: ${data.users}</span>
+                            <span class="stat">平均置信度: ${(data.avg_confidence || 0).toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="dimension-tags">
+                        ${data.tags.slice(0, 5).map(tag => `
+                            <div class="tag-item">
+                                <div class="tag-info">
+                                    <span class="tag-name">${tag.name}</span>
+                                    <span class="tag-confidence">${tag.confidence.toFixed(2)}</span>
+                                </div>
+                                <div class="tag-user">用户: ${tag.username}</div>
+                                ${tag.evidence ? `<div class="tag-evidence">${tag.evidence}</div>` : ''}
+                            </div>
+                        `).join('')}
+                        ${data.tags.length > 5 ? `<div class="more-tags">还有 ${data.tags.length - 5} 个标签...</div>` : ''}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// 渲染标签云
+function renderTagCloud(tagCloud) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !tagCloud.length) return;
+    
+    let cloudContainer = document.getElementById('tagCloud');
+    if (!cloudContainer) {
+        cloudContainer = document.createElement('div');
+        cloudContainer.id = 'tagCloud';
+        cloudContainer.className = 'tag-cloud-container';
+        container.appendChild(cloudContainer);
+    }
+    
+    cloudContainer.innerHTML = `
+        <h3>☁️ 标签云</h3>
+        <div class="tag-cloud">
+            ${tagCloud.map(tag => `
+                <span class="cloud-tag" style="font-size: ${Math.min(24, 12 + tag.count * 2)}px">
+                    ${tag.name} (${tag.count})
+                </span>
+            `).join('')}
+        </div>
+    `;
+}
+
+// 渲染置信度分布
+function renderConfidenceDistribution(distribution) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container) return;
+    
+    let distContainer = document.getElementById('confidenceDistribution');
+    if (!distContainer) {
+        distContainer = document.createElement('div');
+        distContainer.id = 'confidenceDistribution';
+        distContainer.className = 'confidence-distribution';
+        container.appendChild(distContainer);
+    }
+    
+    const total = Object.values(distribution).reduce((sum, count) => sum + count, 0);
+    
+    distContainer.innerHTML = `
+        <h3>📈 置信度分布</h3>
+        <div class="confidence-chart">
+            ${Object.entries(distribution).map(([range, count]) => {
+                const percentage = total > 0 ? (count / total * 100).toFixed(1) : 0;
+                return `
+                    <div class="confidence-bar">
+                        <div class="bar-label">${range}</div>
+                        <div class="bar-container">
+                            <div class="bar-fill" style="width: ${percentage}%"></div>
+                        </div>
+                        <div class="bar-value">${count} (${percentage}%)</div>
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+}
+
+// 渲染用户画像摘要
+function renderUserProfilesSummary(profiles) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !Object.keys(profiles).length) return;
+    
+    let profilesContainer = document.getElementById('userProfilesSummary');
+    if (!profilesContainer) {
+        profilesContainer = document.createElement('div');
+        profilesContainer.id = 'userProfilesSummary';
+        profilesContainer.className = 'user-profiles-summary';
+        container.appendChild(profilesContainer);
+    }
+    
+    const profileEntries = Object.entries(profiles);
+    
+    profilesContainer.innerHTML = `
+        <h3>👥 用户画像摘要</h3>
+        <div class="profiles-grid">
+            ${profileEntries.map(([phone, profile]) => `
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <h4>${profile.username}</h4>
+                        <span class="profile-phone">${phone}</span>
+                        <span class="profile-role ${profile.role}">${profile.role === 'admin' ? '管理员' : '用户'}</span>
+                    </div>
+                    <div class="profile-stats">
+                        <span>标签数: ${profile.total_tags}</span>
+                        <span>平均置信度: ${profile.avg_confidence.toFixed(2)}</span>
+                    </div>
+                    <div class="profile-dimensions">
+                        ${Object.entries(profile.tags_by_dimension).map(([dim, tags]) => `
+                            <div class="profile-dimension">
+                                <strong>${dim}</strong>: ${tags.slice(0, 2).map(tag => tag.name).join(', ')}
+                                ${tags.length > 2 ? ` (+${tags.length - 2}个)` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// 渲染标签错误信息
+function renderTagsError() {
+    const container = document.getElementById('tagStatsList');
+    if (container) {
+        container.innerHTML = `
+            <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>暂无标签数据或加载失败</span>
+            </div>
+        `;
+    }
 }
 
 // 加载分析数据

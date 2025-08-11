@@ -205,6 +205,25 @@ def get_user_statistics():
             "error": f"获取统计信息失败: {str(e)}"
         }), 500
 
+@user_bp.route('/admin/tags/analysis', methods=['GET'])
+@admin_required
+def get_detailed_tag_analysis():
+    """获取详细的标签分析（管理员功能）"""
+    try:
+        user_manager = UserManager(current_app.config['DB_MANAGER'])
+        analysis = user_manager.get_detailed_tag_analysis()
+        
+        return jsonify({
+            "success": True,
+            "analysis": analysis
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"获取标签分析失败: {str(e)}"
+        }), 500
+
 @user_bp.route('/admin/users/<phone_number>/profile', methods=['GET'])
 @admin_required
 def get_user_profile_by_phone(phone_number):

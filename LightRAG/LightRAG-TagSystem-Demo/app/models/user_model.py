@@ -274,6 +274,141 @@ class UserManager:
                 'tag_statistics': {}
             }
     
+    def get_detailed_tag_analysis(self) -> Dict:
+        """获取详细的标签分析（管理员功能）"""
+        try:
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 获取所有标签的详细信息
+                cursor.execute('''
+                    SELECT u.phone_number, u.username, u.role,
+                           t.dimension, t.tag_name, t.confidence, t.evidence,
+                           t.created_at, t.last_updated
+                    FROM user_tags t
+                    JOIN users u ON t.phone_number = u.phone_number
+                    WHERE t.is_active = 1
+                    ORDER BY t.dimension, t.confidence DESC
+                ''')
+                
+                raw_tags = cursor.fetchall()
+                
+                if not raw_tags:
+                    return {
+                        'total_tags': 0,
+                        'dimensions': {},
+                        'user_profiles': {},
+                        'tag_cloud': [],
+                        'confidence_distribution': {}
+                    }
+                
+                # 按维度分组
+                dimensions = {}
+                user_profiles = {}
+                tag_cloud = {}
+                confidence_ranges = {'高置信度(>0.8)': 0, '中置信度(0.5-0.8)': 0, '低置信度(<0.5)': 0}
+                
+                for phone, username, role, dimension, tag_name, confidence, evidence, created_at, updated_at in raw_tags:
+                    # 维度分析
+                    if dimension not in dimensions:
+                        dimensions[dimension] = {
+                            'name': dimension,
+                            'total_tags': 0,
+                            'avg_confidence': 0,
+                            'tags': [],
+                            'users': set()
+                        }
+                    
+                    dimensions[dimension]['total_tags'] += 1
+                    dimensions[dimension]['tags'].append({
+                        'name': tag_name,
+                        'confidence': confidence,
+                        'user': phone,
+                        'username': username or phone,
+                        'evidence': evidence[:100] + '...' if len(evidence) > 100 else evidence,
+                        'created_at': created_at,
+                        'updated_at': updated_at
+                    })
+                    dimensions[dimension]['users'].add(phone)
+                    
+                    # 用户画像分析
+                    if phone not in user_profiles:
+                        user_profiles[phone] = {
+                            'phone': phone,
+                            'username': username or '未设置',
+                            'role': role,
+                            'tags_by_dimension': {},
+                            'total_tags': 0,
+                            'avg_confidence': 0
+                        }
+                    
+                    if dimension not in user_profiles[phone]['tags_by_dimension']:
+                        user_profiles[phone]['tags_by_dimension'][dimension] = []
+                    
+                    user_profiles[phone]['tags_by_dimension'][dimension].append({
+                        'name': tag_name,
+                        'confidence': confidence,
+                        'evidence': evidence[:50] + '...' if len(evidence) > 50 else evidence
+                    })
+                    user_profiles[phone]['total_tags'] += 1
+                    
+                    # 标签云数据
+                    if tag_name not in tag_cloud:
+                        tag_cloud[tag_name] = 0
+                    tag_cloud[tag_name] += 1
+                    
+                    # 置信度分布
+                    if confidence > 0.8:
+                        confidence_ranges['高置信度(>0.8)'] += 1
+                    elif confidence >= 0.5:
+                        confidence_ranges['中置信度(0.5-0.8)'] += 1
+                    else:
+                        confidence_ranges['低置信度(<0.5)'] += 1
+                
+                # 计算平均置信度
+                for dim_data in dimensions.values():
+                    if dim_data['total_tags'] > 0:
+                        dim_data['avg_confidence'] = sum(tag['confidence'] for tag in dim_data['tags']) / dim_data['total_tags']
+                        dim_data['users'] = len(dim_data['users'])
+                    else:
+                        dim_data['avg_confidence'] = 0
+                        dim_data['users'] = 0
+                
+                for user_data in user_profiles.values():
+                    if user_data['total_tags'] > 0:
+                        total_conf = sum(
+                            tag['confidence'] 
+                            for dim_tags in user_data['tags_by_dimension'].values() 
+                            for tag in dim_tags
+                        )
+                        user_data['avg_confidence'] = total_conf / user_data['total_tags']
+                    else:
+                        user_data['avg_confidence'] = 0
+                
+                # 转换标签云为列表
+                tag_cloud_list = [{'name': name, 'count': count} for name, count in sorted(tag_cloud.items(), key=lambda x: x[1], reverse=True)]
+                
+                return {
+                    'total_tags': len(raw_tags),
+                    'total_users': len(user_profiles),
+                    'dimensions': dimensions,
+                    'user_profiles': user_profiles,
+                    'tag_cloud': tag_cloud_list[:20],  # 只返回前20个最常见的标签
+                    'confidence_distribution': confidence_ranges
+                }
+                
+        except Exception as e:
+            print(f"获取详细标签分析失败: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'total_tags': 0,
+                'dimensions': {},
+                'user_profiles': {},
+                'tag_cloud': [],
+                'confidence_distribution': {}
+            }
+    
     def migrate_user_data(self):
         """数据迁移方法：将现有用户数据迁移到新结构"""
         try:

@@ -22,38 +22,50 @@
             <!-- 登录表单 -->
             <form id="loginForm" class="auth-form">
                 <div class="form-group">
-                    <label for="loginUsername">用户名</label>
-                    <input type="text" id="loginUsername" name="username" required>
+                    <label for="loginPhone">手机号</label>
+                    <input type="tel" id="loginPhone" name="phone_number" placeholder="请输入11位手机号" 
+                           pattern="^1[3-9]\d{9}$" required>
+                    <small class="form-hint">请输入11位中国大陆手机号</small>
                 </div>
                 
                 <div class="form-group">
-                    <label for="loginPassword">密码</label>
-                    <input type="password" id="loginPassword" name="password" required>
+                    <label for="loginPassword">密码（可选）</label>
+                    <input type="password" id="loginPassword" name="password">
+                    <small class="form-hint">首次登录可不填密码，系统将自动创建账号</small>
                 </div>
                 
                 <button type="submit" class="auth-btn">登录</button>
+                <button type="button" class="auth-btn auth-btn-secondary" onclick="quickLogin()">快速登录</button>
             </form>
             
             <!-- 注册表单 -->
             <form id="registerForm" class="auth-form" style="display: none;">
                 <div class="form-group">
-                    <label for="registerUsername">用户名</label>
-                    <input type="text" id="registerUsername" name="username" required>
+                    <label for="registerPhone">手机号</label>
+                    <input type="tel" id="registerPhone" name="phone_number" placeholder="请输入11位手机号" 
+                           pattern="^1[3-9]\d{9}$" required>
+                    <small class="form-hint">请输入11位中国大陆手机号</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerUsername">用户名（可选）</label>
+                    <input type="text" id="registerUsername" name="username" placeholder="不填将使用手机号作为用户名">
                 </div>
                 
                 <div class="form-group">
                     <label for="registerEmail">邮箱（可选）</label>
-                    <input type="email" id="registerEmail" name="email">
+                    <input type="email" id="registerEmail" name="email" placeholder="选填邮箱地址">
                 </div>
                 
                 <div class="form-group">
-                    <label for="registerPassword">密码</label>
-                    <input type="password" id="registerPassword" name="password" required>
+                    <label for="registerPassword">密码（可选）</label>
+                    <input type="password" id="registerPassword" name="password" placeholder="不设置密码可直接用手机号登录">
+                    <small class="form-hint">密码至少6位，不设置则可直接用手机号登录</small>
                 </div>
                 
-                <div class="form-group">
+                <div class="form-group" id="confirmPasswordGroup" style="display: none;">
                     <label for="confirmPassword">确认密码</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword">
                 </div>
                 
                 <button type="submit" class="auth-btn">注册</button>

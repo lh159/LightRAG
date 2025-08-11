@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员看板 - LightRAG标签系统</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 侧边栏 -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-crown"></i> 管理员看板</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" data-section="overview">
+                    <i class="fas fa-tachometer-alt"></i> 总览
+                </li>
+                <li class="menu-item" data-section="users">
+                    <i class="fas fa-users"></i> 用户管理
+                </li>
+                <li class="menu-item" data-section="tags">
+                    <i class="fas fa-tags"></i> 标签分析
+                </li>
+                <li class="menu-item" data-section="analytics">
+                    <i class="fas fa-chart-bar"></i> 数据分析
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <i class="fas fa-user-shield"></i>
+                    <span id="currentAdmin">管理员</span>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> 退出
+                </button>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="pageTitle">系统总览</h1>
+                <div class="header-actions">
+                    <button class="refresh-btn" onclick="refreshData()">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </header>
+
+            <!-- 总览页面 -->
+            <section id="overview-section" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalUsers">-</h3>
+                            <p>总用户数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="adminCount">-</h3>
+                            <p>管理员数量</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="dailyActive">-</h3>
+                            <p>今日活跃</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="totalTags">-</h3>
+                            <p>标签总数</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>标签分布</h3>
+                        <canvas id="tagDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>用户活跃度</h3>
+                        <canvas id="userActivityChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 用户管理页面 -->
+            <section id="users-section" class="content-section">
+                <div class="table-controls">
+                    <div class="search-box">
+                        <input type="text" id="userSearch" placeholder="搜索用户手机号或用户名">
+                        <i class="fas fa-search"></i>
+                    </div>
+                    <button class="filter-btn" onclick="toggleFilters()">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+
+                <div class="filter-panel" id="filterPanel" style="display: none;">
+                    <div class="filter-group">
+                        <label>用户角色:</label>
+                        <select id="roleFilter">
+                            <option value="">全部</option>
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>状态:</label>
+                        <select id="statusFilter">
+                            <option value="">全部</option>
+                            <option value="active">活跃</option>
+                            <option value="inactive">非活跃</option>
+                        </select>
+                    </div>
+                    <button class="apply-filter-btn" onclick="applyFilters()">应用筛选</button>
+                </div>
+
+                <div class="table-container">
+                    <table class="users-table">
+                        <thead>
+                            <tr>
+                                <th>手机号</th>
+                                <th>用户名</th>
+                                <th>角色</th>
+                                <th>注册时间</th>
+                                <th>最后登录</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- 用户数据将通过JavaScript填充 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination" id="usersPagination">
+                    <!-- 分页将通过JavaScript生成 -->
+                </div>
+            </section>
+
+            <!-- 标签分析页面 -->
+            <section id="tags-section" class="content-section">
+                <div class="tags-overview">
+                    <div class="tag-stats">
+                        <h3>标签统计</h3>
+                        <div id="tagStatsList" class="tag-stats-list">
+                            <!-- 标签统计将通过JavaScript填充 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 数据分析页面 -->
+            <section id="analytics-section" class="content-section">
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>用户增长趋势</h3>
+                        <div id="userGrowthChart"></div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>标签使用热度</h3>
+                        <div id="tagHeatMap"></div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 用户详情模态框 -->
+    <div class="modal" id="userDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>用户详情</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="userDetailContent">
+                <!-- 用户详情内容将通过JavaScript填充 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

@@ -122,4 +122,67 @@
     background: #f8d7da;
     color: #721c24;
     border: 1px solid #f5c6cb;
+}
+
+/* 手机号输入特殊样式 */
+input[type="tel"] {
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+/* 表单提示文字 */
+.form-hint {
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+}
+
+/* 次要按钮样式 */
+.auth-btn-secondary {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    margin-top: 10px;
+}
+
+.auth-btn-secondary:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea080 100%);
+}
+
+/* 按钮组样式 */
+.auth-form .auth-btn + .auth-btn {
+    margin-top: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+    .auth-card {
+        padding: 30px 20px;
+        width: 95vw;
+    }
+    
+    .auth-header h1 {
+        font-size: 24px;
+    }
+    
+    .form-group input {
+        padding: 10px 14px;
+        font-size: 14px;
+    }
+    
+    .auth-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+/* 管理员标识 */
+.admin-badge {
+    display: inline-block;
+    background: #ffc107;
+    color: #212529;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin-left: 8px;
 } 

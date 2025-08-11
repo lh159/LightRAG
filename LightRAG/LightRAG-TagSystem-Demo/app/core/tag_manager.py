@@ -232,11 +232,21 @@ class TagConflictResolver:
         }
 
 class TagManager:
-    def __init__(self, user_id: str):
+    def __init__(self, user_id: str, db_manager=None):
         self.user_id = user_id
         self.user_data_path = f"user_data/{user_id}"
         self.tags_file = f"{self.user_data_path}/user_tags.json"
         self.timeline_file = f"{self.user_data_path}/tag_timeline.json"
+        
+        # 🆕 数据库管理器（用于同步标签数据）
+        self.db_manager = db_manager
+        if not self.db_manager:
+            # 如果没有传入，尝试导入并创建
+            try:
+                from utils.database import DatabaseManager
+                self.db_manager = DatabaseManager()
+            except ImportError:
+                self.db_manager = None
         
         # 🚀 加载性能配置
         self.performance_config = self._load_performance_config()
@@ -539,10 +549,72 @@ class TagManager:
         # 保存到文件
         self._save_tags(current_tags)
         
+        # 🆕 同步到数据库
+        self._sync_tags_to_database(current_tags)
+        
         # 记录到时间轴
         self._record_tag_timeline(extracted_tags)
         
         return current_tags
+    
+    def _sync_tags_to_database(self, current_tags: Dict):
+        """同步标签数据到数据库"""
+        if not self.db_manager:
+            return
+        
+        try:
+            import sqlite3
+            with self.db_manager.get_connection() as conn:
+                cursor = conn.cursor()
+                
+                # 先清除该用户的所有标签（标记为非活跃）
+                cursor.execute('''
+                    UPDATE user_tags SET is_active = 0 
+                    WHERE phone_number = ?
+                ''', (self.user_id,))
+                
+                tag_count = 0
+                
+                # 处理嵌套的标签数据结构
+                for dimension_key, dimension_data in current_tags.get("tag_dimensions", {}).items():
+                    if not isinstance(dimension_data, dict):
+                        continue
+                        
+                    dimension_name = dimension_data.get("dimension_name", dimension_key)
+                    
+                    # 处理子分类
+                    for subcategory_key, subcategory_data in dimension_data.get("subcategories", {}).items():
+                        if not isinstance(subcategory_data, dict):
+                            continue
+                            
+                        # 处理活跃标签
+                        for tag_data in subcategory_data.get("active_tags", []):
+                            if not isinstance(tag_data, dict):
+                                continue
+                                
+                            cursor.execute('''
+                                INSERT OR REPLACE INTO user_tags 
+                                (phone_number, dimension, tag_name, confidence, evidence, 
+                                 created_at, last_updated, is_active)
+                                VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+                            ''', (
+                                self.user_id,
+                                dimension_name,
+                                tag_data.get("tag_name", "未知标签"),
+                                tag_data.get("avg_confidence", 0.5),
+                                json.dumps(tag_data.get("evidence", ""), ensure_ascii=False),
+                                tag_data.get("first_detected", datetime.now().isoformat()),
+                                tag_data.get("last_reinforced", datetime.now().isoformat())
+                            ))
+                            tag_count += 1
+                
+                conn.commit()
+                print(f"✅ 成功同步标签数据到数据库: 用户 {self.user_id} ({tag_count} 个标签)")
+                
+        except Exception as e:
+            print(f"❌ 同步标签数据到数据库失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
     
     def _load_current_tags(self) -> Dict:
         """加载当前标签"""

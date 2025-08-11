@@ -31,14 +31,22 @@ ENV/
 *.db
 *.sqlite
 *.sqlite3
+database/
+database_backup_*/
 
 # Logs
 logs/
 *.log
+server.log
 
 # User data (contains sensitive information)
 user_data/
+user_data_backup_*/
 backup_*/
+
+# Test files
+test_*.py
+debug_*.py
 
 # IDE
 .vscode/

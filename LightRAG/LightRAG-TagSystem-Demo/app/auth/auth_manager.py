@@ -1,5 +1,6 @@
 import jwt
 import secrets
+import re
 from datetime import datetime, timedelta
 from typing import Optional, Dict
 from flask import request, session
@@ -9,43 +10,51 @@ class AuthManager:
         self.db_manager = db_manager
         self.secret_key = secret_key
     
-    def login(self, username: str, password: str) -> Dict:
-        """用户登录"""
+    def login(self, phone_number: str, password: str = None) -> Dict:
+        """用户登录（基于手机号）"""
+        # 验证手机号格式
+        if not self._validate_phone_number(phone_number):
+            return {"success": False, "error": "手机号格式不正确"}
+        
         # 验证用户凭据
-        auth_result = self.db_manager.authenticate_user(username, password)
+        auth_result = self.db_manager.authenticate_user(phone_number, password)
         
         if not auth_result["success"]:
             return auth_result
         
-        user_id = auth_result["user_id"]
+        phone_number = auth_result["phone_number"]
+        username = auth_result["username"]
+        role = auth_result["role"]
         
         # 创建会话
-        session_token = self.db_manager.create_session(user_id)
+        session_token = self.db_manager.create_session(phone_number)
         
         # 生成JWT令牌
-        jwt_token = self._generate_jwt_token(user_id, username)
+        jwt_token = self._generate_jwt_token(phone_number, username, role)
         
         return {
             "success": True,
-            "user_id": user_id,
+            "phone_number": phone_number,
             "username": username,
+            "role": role,
+            "is_admin": role == 'admin',
             "session_token": session_token,
             "jwt_token": jwt_token
         }
     
-    def register(self, username: str, password: str, email: str = None) -> Dict:
-        """用户注册"""
+    def register(self, phone_number: str, password: str = None, username: str = None, email: str = None) -> Dict:
+        """用户注册（基于手机号）"""
         # 验证输入
-        validation_result = self._validate_registration_input(username, password, email)
+        validation_result = self._validate_registration_input(phone_number, password, username, email)
         if not validation_result["success"]:
             return validation_result
         
         # 创建用户
-        create_result = self.db_manager.create_user(username, password, email)
+        create_result = self.db_manager.create_user(phone_number, password, username, email)
         
         if create_result["success"]:
             # 自动登录
-            return self.login(username, password)
+            return self.login(phone_number, password)
         else:
             return create_result
     
@@ -67,11 +76,12 @@ class AuthManager:
         """验证JWT令牌"""
         try:
             payload = jwt.decode(token, self.secret_key, algorithms=["HS256"])
-            user_id = payload.get("user_id")
+            phone_number = payload.get("phone_number")
             username = payload.get("username")
+            role = payload.get("role")
             exp = payload.get("exp")
             
-            if not user_id or not username or not exp:
+            if not phone_number or not exp:
                 return None
             
             # 检查令牌是否过期
@@ -79,8 +89,10 @@ class AuthManager:
                 return None
             
             return {
-                "user_id": user_id,
-                "username": username
+                "phone_number": phone_number,
+                "username": username,
+                "role": role,
+                "is_admin": role == 'admin'
             }
         except jwt.InvalidTokenError:
             return None
@@ -94,34 +106,55 @@ class AuthManager:
             return self.validate_token(token)
         
         # 从session获取
-        if "user_id" in session:
-            user_id = session["user_id"]
-            user = self.db_manager.get_user_by_id(user_id)
-            if user:
+        if "phone_number" in session:
+            phone_number = session["phone_number"]
+            # 验证session中的用户是否仍然存在且有效
+            user = self.db_manager.get_user_by_phone(phone_number)
+            if user and user.get("is_active", True):
                 return {
-                    "user_id": user["id"],
-                    "username": user["username"]
+                    "phone_number": user["phone_number"],
+                    "username": user["username"],
+                    "role": user["role"],
+                    "is_admin": user["role"] == "admin"
                 }
+            else:
+                # 用户不存在或已被禁用，清除session
+                session.clear()
         
         return None
     
-    def _generate_jwt_token(self, user_id: int, username: str) -> str:
+    def require_admin(self) -> bool:
+        """检查当前用户是否为管理员"""
+        current_user = self.get_current_user()
+        return current_user and current_user.get("is_admin", False)
+    
+    def _generate_jwt_token(self, phone_number: str, username: str, role: str) -> str:
         """生成JWT令牌"""
         payload = {
-            "user_id": user_id,
+            "phone_number": phone_number,
             "username": username,
+            "role": role,
             "exp": datetime.utcnow() + timedelta(hours=24),
             "iat": datetime.utcnow()
         }
         return jwt.encode(payload, self.secret_key, algorithm="HS256")
     
-    def _validate_registration_input(self, username: str, password: str, email: str = None) -> Dict:
+    def _validate_phone_number(self, phone: str) -> bool:
+        """验证手机号格式"""
+        # 中国大陆手机号验证
+        pattern = r'^1[3-9]\d{9}$'
+        return re.match(pattern, phone) is not None
+    
+    def _validate_registration_input(self, phone_number: str, password: str = None, username: str = None, email: str = None) -> Dict:
         """验证注册输入"""
-        if not username or len(username) < 3:
-            return {"success": False, "error": "用户名至少需要3个字符"}
+        if not self._validate_phone_number(phone_number):
+            return {"success": False, "error": "手机号格式不正确"}
         
-        if not password or len(password) < 6:
+        if password and len(password) < 6:
             return {"success": False, "error": "密码至少需要6个字符"}
+        
+        if username and len(username) < 2:
+            return {"success": False, "error": "用户名至少需要2个字符"}
         
         if email and "@" not in email:
             return {"success": False, "error": "邮箱格式不正确"}

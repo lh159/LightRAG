@@ -52,6 +52,32 @@
             flex: 1;
         }
         
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .admin-btn {
+            background: rgba(255, 215, 0, 0.9);
+            color: #333;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .admin-btn:hover {
+            background: rgba(255, 215, 0, 1);
+            border-color: rgba(255, 215, 0, 0.8);
+            transform: translateY(-1px);
+        }
+        
         .logout-btn {
             background: rgba(255, 255, 255, 0.2);
             color: white;
@@ -1064,7 +1090,12 @@
                     <h2>🤖 LightRAG情感陪伴助手</h2>
                     <p>集成智能标签体系的个性化聊天Demo</p>
                 </div>
-                <a href="/logout" class="logout-btn">🚪 退出登录</a>
+                <div class="header-actions">
+                    {% if user.get('is_admin', False) %}
+                    <a href="/admin" class="admin-btn">👑 管理员看板</a>
+                    {% endif %}
+                    <a href="/logout" class="logout-btn">🚪 退出登录</a>
+                </div>
             </div>
             
             <div class="chat-messages" id="chatMessages">

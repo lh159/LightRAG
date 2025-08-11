@@ -21,41 +21,44 @@ class DatabaseManager:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             
-            # 用户表
+            # 检查是否需要数据迁移
+            self._check_and_migrate_schema(cursor)
+            
+            # 用户表（新结构：以手机号为主键）
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS users (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    username VARCHAR(50) UNIQUE NOT NULL,
-                    email VARCHAR(100) UNIQUE,
-                    password_hash VARCHAR(255) NOT NULL,
-                    salt VARCHAR(255) NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    last_login TIMESTAMP,
+                    phone_number VARCHAR(11) PRIMARY KEY,
+                    username VARCHAR(50),
+                    email VARCHAR(100),
+                    password_hash VARCHAR(255),
+                    salt VARCHAR(255),
+                    role VARCHAR(20) DEFAULT 'user',
+                    created_at TEXT NOT NULL,
+                    last_login TEXT,
                     is_active BOOLEAN DEFAULT 1,
-                    is_admin BOOLEAN DEFAULT 0,
-                    profile_data TEXT,
-                    settings TEXT
+                    profile_data TEXT DEFAULT '{}',
+                    settings TEXT DEFAULT '{}'
                 )
             ''')
             
-            # 会话表
+            # 会话表（关联手机号）
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS sessions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
+                    phone_number VARCHAR(11) NOT NULL,
                     session_token VARCHAR(255) UNIQUE NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     expires_at TIMESTAMP NOT NULL,
                     is_active BOOLEAN DEFAULT 1,
-                    FOREIGN KEY (user_id) REFERENCES users (id)
+                    FOREIGN KEY (phone_number) REFERENCES users (phone_number)
                 )
             ''')
             
-            # 用户标签表
+            # 用户标签表（关联手机号）
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS user_tags (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
+                    phone_number VARCHAR(11) NOT NULL,
                     dimension VARCHAR(50) NOT NULL,
                     tag_name VARCHAR(100) NOT NULL,
                     confidence REAL DEFAULT 0.5,
@@ -63,51 +66,65 @@ class DatabaseManager:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     is_active BOOLEAN DEFAULT 1,
-                    FOREIGN KEY (user_id) REFERENCES users (id)
+                    FOREIGN KEY (phone_number) REFERENCES users (phone_number)
                 )
             ''')
             
-            # 用户知识库表
+            # 用户知识库表（关联手机号）
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS user_knowledge (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
+                    phone_number VARCHAR(11) NOT NULL,
                     content TEXT NOT NULL,
                     metadata TEXT,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     last_accessed TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     access_count INTEGER DEFAULT 0,
-                    FOREIGN KEY (user_id) REFERENCES users (id)
+                    FOREIGN KEY (phone_number) REFERENCES users (phone_number)
                 )
             ''')
             
             conn.commit()
     
-    def create_user(self, username: str, password: str, email: str = None) -> Dict:
+    def create_user(self, phone_number: str, password: str = None, username: str = None, email: str = None) -> Dict:
         """创建新用户"""
         try:
-            salt = secrets.token_hex(16)
-            password_hash = self._hash_password(password, salt)
+            # 验证手机号格式
+            if not self._validate_phone_number(phone_number):
+                return {
+                    "success": False,
+                    "error": "手机号格式不正确"
+                }
+            
+            # 自动分配角色
+            role = self._assign_admin_role(phone_number)
+            
+            # 如果提供了密码，则创建密码哈希
+            password_hash = None
+            salt = None
+            if password:
+                salt = secrets.token_hex(16)
+                password_hash = self._hash_password(password, salt)
             
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    INSERT INTO users (username, email, password_hash, salt)
-                    VALUES (?, ?, ?, ?)
-                ''', (username, email, password_hash, salt))
+                    INSERT INTO users (phone_number, username, email, password_hash, salt, role, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (phone_number, username, email, password_hash, salt, role, datetime.now().isoformat()))
                 
-                user_id = cursor.lastrowid
                 conn.commit()
                 
                 return {
                     "success": True,
-                    "user_id": user_id,
-                    "username": username
+                    "phone_number": phone_number,
+                    "username": username,
+                    "role": role
                 }
         except sqlite3.IntegrityError:
             return {
                 "success": False,
-                "error": "用户名或邮箱已存在"
+                "error": "手机号已存在"
             }
         except Exception as e:
             return {
@@ -115,41 +132,45 @@ class DatabaseManager:
                 "error": f"创建用户失败: {str(e)}"
             }
     
-    def authenticate_user(self, username: str, password: str) -> Dict:
+    def authenticate_user(self, phone_number: str, password: str = None) -> Dict:
         """用户认证"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    SELECT id, username, password_hash, salt, is_active
-                    FROM users WHERE username = ?
-                ''', (username,))
+                    SELECT phone_number, username, password_hash, salt, is_active, role
+                    FROM users WHERE phone_number = ?
+                ''', (phone_number,))
                 
                 result = cursor.fetchone()
                 if not result:
                     return {"success": False, "error": "用户不存在"}
                 
-                user_id, username, stored_hash, salt, is_active = result
+                phone_number, username, stored_hash, salt, is_active, role = result
                 
                 if not is_active:
                     return {"success": False, "error": "账户已被禁用"}
                 
-                # 验证密码
-                input_hash = self._hash_password(password, salt)
-                if input_hash != stored_hash:
-                    return {"success": False, "error": "密码错误"}
+                # 如果设置了密码，则验证密码
+                if stored_hash and password:
+                    input_hash = self._hash_password(password, salt)
+                    if input_hash != stored_hash:
+                        return {"success": False, "error": "密码错误"}
+                elif stored_hash and not password:
+                    return {"success": False, "error": "需要密码"}
                 
                 # 更新最后登录时间
                 cursor.execute('''
-                    UPDATE users SET last_login = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ''', (user_id,))
+                    UPDATE users SET last_login = ?
+                    WHERE phone_number = ?
+                ''', (datetime.now().isoformat(), phone_number))
                 conn.commit()
                 
                 return {
                     "success": True,
-                    "user_id": user_id,
-                    "username": username
+                    "phone_number": phone_number,
+                    "username": username,
+                    "role": role
                 }
         except Exception as e:
             return {
@@ -157,7 +178,7 @@ class DatabaseManager:
                 "error": f"认证失败: {str(e)}"
             }
     
-    def create_session(self, user_id: int, expires_hours: int = 24) -> str:
+    def create_session(self, phone_number: str, expires_hours: int = 24) -> str:
         """创建用户会话"""
         session_token = secrets.token_hex(32)
         expires_at = datetime.now().timestamp() + (expires_hours * 3600)
@@ -165,20 +186,20 @@ class DatabaseManager:
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT INTO sessions (user_id, session_token, expires_at)
+                INSERT INTO sessions (phone_number, session_token, expires_at)
                 VALUES (?, ?, datetime(?, 'unixepoch'))
-            ''', (user_id, session_token, expires_at))
+            ''', (phone_number, session_token, expires_at))
             conn.commit()
         
         return session_token
     
-    def validate_session(self, session_token: str) -> Optional[int]:
-        """验证会话并返回用户ID"""
+    def validate_session(self, session_token: str) -> Optional[str]:
+        """验证会话并返回手机号"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    SELECT user_id FROM sessions 
+                    SELECT phone_number FROM sessions 
                     WHERE session_token = ? 
                     AND expires_at > CURRENT_TIMESTAMP
                     AND is_active = 1
@@ -193,29 +214,30 @@ class DatabaseManager:
         """获取数据库连接"""
         return sqlite3.connect(self.db_path)
     
-    def get_user_by_id(self, user_id: int) -> Optional[Dict]:
-        """根据ID获取用户"""
+    def get_user_by_phone(self, phone_number: str) -> Optional[Dict]:
+        """根据手机号获取用户"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
-                    SELECT id, username, email, created_at, last_login, 
-                           is_active, is_admin, profile_data, settings
-                    FROM users WHERE id = ?
-                ''', (user_id,))
+                    SELECT phone_number, username, email, role, created_at, last_login, 
+                           is_active, profile_data, settings
+                    FROM users WHERE phone_number = ?
+                ''', (phone_number,))
                 
                 result = cursor.fetchone()
                 if not result:
                     return None
                 
                 return {
-                    "id": result[0],
+                    "phone_number": result[0],
                     "username": result[1],
                     "email": result[2],
-                    "created_at": result[3],
-                    "last_login": result[4],
-                    "is_active": bool(result[5]),
-                    "is_admin": bool(result[6]),
+                    "role": result[3],
+                    "created_at": result[4],
+                    "last_login": result[5],
+                    "is_active": bool(result[6]),
+                    "is_admin": result[3] == 'admin',
                     "profile_data": json.loads(result[7]) if result[7] else {},
                     "settings": json.loads(result[8]) if result[8] else {}
                 }
@@ -223,31 +245,31 @@ class DatabaseManager:
             print(f"获取用户失败: {e}")
             return None
     
-    def update_user_profile(self, user_id: int, profile_data: Dict) -> bool:
+    def update_user_profile(self, phone_number: str, profile_data: Dict) -> bool:
         """更新用户资料"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
                     UPDATE users SET profile_data = ?
-                    WHERE id = ?
-                ''', (json.dumps(profile_data), user_id))
+                    WHERE phone_number = ?
+                ''', (json.dumps(profile_data), phone_number))
                 conn.commit()
                 return True
         except Exception as e:
             print(f"更新用户资料失败: {e}")
             return False
     
-    def get_user_knowledge(self, user_id: int) -> List[Dict]:
+    def get_user_knowledge(self, phone_number: str) -> List[Dict]:
         """获取用户知识库数据"""
         try:
             with sqlite3.connect(self.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute('''
                     SELECT content, metadata, created_at, last_accessed, access_count
-                    FROM user_knowledge WHERE user_id = ?
+                    FROM user_knowledge WHERE phone_number = ?
                     ORDER BY last_accessed DESC
-                ''', (user_id,))
+                ''', (phone_number,))
                 
                 results = cursor.fetchall()
                 return [
@@ -262,6 +284,37 @@ class DatabaseManager:
                 ]
         except Exception as e:
             print(f"获取用户知识库失败: {e}")
+            return []
+    
+    def get_all_users(self) -> List[Dict]:
+        """获取所有用户（管理员功能）"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT phone_number, username, email, role, created_at, last_login, 
+                           is_active, profile_data, settings
+                    FROM users ORDER BY created_at DESC
+                ''')
+                
+                results = cursor.fetchall()
+                return [
+                    {
+                        "phone_number": row[0],
+                        "username": row[1],
+                        "email": row[2],
+                        "role": row[3],
+                        "created_at": row[4],
+                        "last_login": row[5],
+                        "is_active": bool(row[6]),
+                        "is_admin": row[3] == 'admin',
+                        "profile_data": json.loads(row[7]) if row[7] else {},
+                        "settings": json.loads(row[8]) if row[8] else {}
+                    }
+                    for row in results
+                ]
+        except Exception as e:
+            print(f"获取用户列表失败: {e}")
             return []
     
     def backup_database(self) -> bool:
@@ -300,4 +353,87 @@ class DatabaseManager:
     
     def _hash_password(self, password: str, salt: str) -> str:
         """密码哈希"""
-        return hashlib.sha256((password + salt).encode()).hexdigest() 
+        return hashlib.sha256((password + salt).encode()).hexdigest()
+    
+    def _validate_phone_number(self, phone: str) -> bool:
+        """验证手机号格式"""
+        import re
+        # 中国大陆手机号验证
+        pattern = r'^1[3-9]\d{9}$'
+        return re.match(pattern, phone) is not None
+    
+    def _assign_admin_role(self, phone_number: str) -> str:
+        """自动分配用户角色"""
+        # 管理员手机号配置
+        ADMIN_PHONE_NUMBERS = ['19802025320']
+        if phone_number in ADMIN_PHONE_NUMBERS:
+            return 'admin'
+        return 'user'
+    
+    def _check_and_migrate_schema(self, cursor):
+        """检查并迁移数据库结构"""
+        try:
+            # 检查是否存在旧的用户表结构
+            cursor.execute("PRAGMA table_info(users)")
+            columns = [column[1] for column in cursor.fetchall()]
+            
+            if columns and 'phone_number' not in columns:
+                print("检测到旧的用户表结构，开始数据迁移...")
+                
+                # 备份现有数据
+                cursor.execute('CREATE TABLE IF NOT EXISTS users_backup AS SELECT * FROM users')
+                
+                # 删除旧表
+                cursor.execute('DROP TABLE IF EXISTS users')
+                
+                # 删除相关的外键表
+                cursor.execute('DROP TABLE IF EXISTS sessions')
+                cursor.execute('DROP TABLE IF EXISTS user_tags')
+                cursor.execute('DROP TABLE IF EXISTS user_knowledge')
+                
+                print("旧表结构已清理，将创建新的表结构")
+                
+        except Exception as e:
+            print(f"数据迁移检查失败: {e}")
+    
+    def get_user_statistics(self) -> Dict:
+        """获取用户统计信息（管理员功能）"""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                
+                # 总用户数
+                cursor.execute('SELECT COUNT(*) FROM users WHERE is_active = 1')
+                total_users = cursor.fetchone()[0]
+                
+                # 管理员数量
+                cursor.execute('SELECT COUNT(*) FROM users WHERE role = "admin" AND is_active = 1')
+                admin_count = cursor.fetchone()[0]
+                
+                # 今日活跃用户
+                today = datetime.now().date().isoformat()
+                cursor.execute('SELECT COUNT(*) FROM users WHERE DATE(last_login) = ?', (today,))
+                daily_active = cursor.fetchone()[0] if cursor.fetchone() else 0
+                
+                # 标签统计
+                cursor.execute('''
+                    SELECT dimension, COUNT(*) 
+                    FROM user_tags WHERE is_active = 1 
+                    GROUP BY dimension
+                ''')
+                tag_stats = dict(cursor.fetchall())
+                
+                return {
+                    'total_users': total_users,
+                    'admin_count': admin_count,
+                    'daily_active': daily_active,
+                    'tag_statistics': tag_stats
+                }
+        except Exception as e:
+            print(f"获取统计信息失败: {e}")
+            return {
+                'total_users': 0,
+                'admin_count': 0,
+                'daily_active': 0,
+                'tag_statistics': {}
+            } 

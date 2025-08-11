@@ -42,8 +42,11 @@ def index():
     current_user = auth_manager.get_current_user()
     
     if not current_user:
+        # 清除可能存在的无效session
+        session.clear()
         return redirect(url_for('login'))
     
+    # 管理员也可以访问普通用户界面，不强制重定向
     return render_template('index.html', user=current_user)
 
 @app.route('/login')
@@ -53,14 +56,39 @@ def login():
     current_user = auth_manager.get_current_user()
     
     if current_user:
-        return redirect(url_for('index'))
+        # 根据用户角色重定向
+        if current_user.get('is_admin', False):
+            return redirect(url_for('admin_dashboard'))
+        else:
+            return redirect(url_for('index'))
     
     return render_template('login.html')
+
+@app.route('/admin')
+def admin_dashboard():
+    """管理员看板页面"""
+    auth_manager = AuthManager(db_manager, app.secret_key)
+    current_user = auth_manager.get_current_user()
+    
+    if not current_user:
+        return redirect(url_for('login'))
+    
+    if not current_user.get('is_admin', False):
+        return redirect(url_for('index'))  # 非管理员重定向到普通页面
+    
+    return render_template('admin_dashboard.html', user=current_user)
 
 @app.route('/logout')
 def logout():
     """登出"""
     session.clear()
+    
+    # 如果是AJAX请求，返回JSON响应
+    if request.headers.get('Content-Type') == 'application/json' or \
+       'application/json' in request.headers.get('Accept', ''):
+        return jsonify({"success": True, "message": "退出登录成功"})
+    
+    # 普通请求重定向到登录页面
     return redirect(url_for('login'))
 
 @app.route('/api/chat', methods=['POST'])
@@ -70,18 +98,18 @@ def chat():
     try:
         data = request.json
         user_message = data.get('message', '')
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         # 初始化组件
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
-        tag_manager = TagManager(str(user_id))
-        response_generator = ResponseGenerator(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
+        tag_manager = TagManager(str(phone_number), db_manager)
+        response_generator = ResponseGenerator(str(phone_number))
         
         # 提取标签并记录溯源信息
         extracted_tags, triggers = enhanced_extractor.extract_tags_with_tracing(
             text=user_message,
             context={"source": "chat"},
-            session_id=f"chat_{user_id}_{int(time.time())}",
+            session_id=f"chat_{phone_number}_{int(time.time())}",
             message_id=str(uuid.uuid4())
         )
         
@@ -92,7 +120,7 @@ def chat():
         response_data = response_generator.generate_response(user_message)
         
         # 🔧 修复：获取标准化的用户画像数据（与/api/profile接口保持一致）
-        user_profile = _get_standardized_user_profile(str(user_id))
+        user_profile = _get_standardized_user_profile(str(phone_number))
         
         return jsonify({
             "success": True,
@@ -108,10 +136,10 @@ def chat():
             "error": str(e)
         }), 500
 
-def _get_standardized_user_profile(user_id: str):
+def _get_standardized_user_profile(phone_number: str):
     """获取标准化的用户画像数据，与/api/profile接口保持一致"""
     try:
-        tag_manager = TagManager(user_id)
+        tag_manager = TagManager(phone_number, db_manager)
         user_tags = tag_manager.get_user_tags()
         
         dimensions = user_tags.get('tag_dimensions', {})
@@ -182,8 +210,8 @@ def _get_standardized_user_profile(user_id: str):
 def get_profile():
     """获取用户画像 - 需要登录"""
     try:
-        user_id = request.current_user["user_id"]
-        tag_manager = TagManager(str(user_id))
+        phone_number = request.current_user["phone_number"]
+        tag_manager = TagManager(str(phone_number))
         user_tags = tag_manager.get_user_tags()
         
         # 确保所有维度都存在，即使没有标签 - 新的二级标签结构
@@ -461,9 +489,9 @@ def add_knowledge():
         data = request.json
         knowledge_text = data.get('text', '')
         metadata = data.get('metadata', {})
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
-        lightrag = LightRAGEngine(str(user_id))
+        lightrag = LightRAGEngine(str(phone_number))
         result = lightrag.insert_knowledge(knowledge_text, metadata)
         
         return jsonify(result)
@@ -482,7 +510,7 @@ def process_conversation():
         data = request.json
         conversation_text = data.get('conversation_text', '')
         extract_tags = data.get('extract_tags', True)
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         if not conversation_text.strip():
             return jsonify({
@@ -501,10 +529,10 @@ def process_conversation():
         
         # 初始化组件 - 使用增强版标签提取器支持溯源
         from app.core.enhanced_tag_extractor import EnhancedTagExtractor
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
-        tag_manager = TagManager(str(user_id))
-        response_generator = ResponseGenerator(str(user_id))
-        lightrag = LightRAGEngine(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
+        tag_manager = TagManager(str(phone_number))
+        response_generator = ResponseGenerator(str(phone_number))
+        lightrag = LightRAGEngine(str(phone_number))
         
         all_extracted_tags = {}
         all_trigger_records = []
@@ -755,10 +783,10 @@ def parse_conversation_text(text):
 def get_chat_history():
     """获取历史对话记录 - 需要登录"""
     try:
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         # 从用户数据文件中读取历史对话
-        timeline_file = f"user_data/{user_id}/tag_timeline.json"
+        timeline_file = f"user_data/{phone_number}/tag_timeline.json"
         chat_history = []
         
         if os.path.exists(timeline_file):
@@ -792,11 +820,11 @@ def get_chat_history():
 def reset_user():
     """重置用户数据 - 需要登录"""
     try:
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         # 清除用户数据
         import shutil
-        user_data_path = f"user_data/{user_id}"
+        user_data_path = f"user_data/{phone_number}"
         if os.path.exists(user_data_path):
             shutil.rmtree(user_data_path)
         
@@ -823,7 +851,7 @@ def analyze_message_triggers():
         message_text = data.get('message_text', '')
         session_id = data.get('session_id', str(uuid.uuid4()))
         message_id = data.get('message_id', str(uuid.uuid4()))
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         if not message_text.strip():
             return jsonify({
@@ -832,7 +860,7 @@ def analyze_message_triggers():
             }), 400
         
         # 使用增强版标签提取器
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
         
         # 提取标签并获取触发信息
         new_tags, triggers = enhanced_extractor.extract_tags_with_tracing(
@@ -843,7 +871,7 @@ def analyze_message_triggers():
         )
         
         # 更新标签管理器
-        tag_manager = TagManager(str(user_id))
+        tag_manager = TagManager(str(phone_number))
         tag_manager.update_tags(new_tags)
         
         # 分析文本影响
@@ -871,8 +899,8 @@ def analyze_message_triggers():
 def get_tag_trace(tag_name):
     """获取标签的完整溯源信息"""
     try:
-        user_id = request.current_user["user_id"]
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        phone_number = request.current_user["phone_number"]
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
         
         # 获取标签溯源信息
         trace_info = enhanced_extractor.get_tag_trace_info(tag_name)
@@ -895,8 +923,8 @@ def get_tag_trace(tag_name):
 def get_session_tag_summary(session_id):
     """获取会话的标签变化总结"""
     try:
-        user_id = request.current_user["user_id"]
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        phone_number = request.current_user["phone_number"]
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
         
         # 获取会话标签总结
         summary = enhanced_extractor.get_conversation_tag_summary(session_id)
@@ -919,9 +947,9 @@ def get_session_tag_summary(session_id):
 def get_tag_statistics():
     """获取用户的标签统计信息"""
     try:
-        user_id = request.current_user["user_id"]
-        tag_tracer = TagTracer(str(user_id))
-        tag_manager = TagManager(str(user_id))
+        phone_number = request.current_user["phone_number"]
+        tag_tracer = TagTracer(str(phone_number))
+        tag_manager = TagManager(str(phone_number))
         
         # 获取所有标签
         all_tags_raw = tag_manager.get_user_tags()
@@ -987,10 +1015,10 @@ def get_tag_statistics():
 def export_tag_report(tag_name):
     """导出标签溯源报告"""
     try:
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         format_type = request.args.get('format', 'json')
         
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
         
         # 导出报告
         report = enhanced_extractor.export_tag_trace_report(tag_name, format_type)
@@ -1019,7 +1047,7 @@ def predict_tag_impact():
     try:
         data = request.json
         text = data.get('text', '')
-        user_id = request.current_user["user_id"]
+        phone_number = request.current_user["phone_number"]
         
         if not text.strip():
             return jsonify({
@@ -1027,7 +1055,7 @@ def predict_tag_impact():
                 "error": "文本不能为空"
             }), 400
         
-        enhanced_extractor = EnhancedTagExtractor(str(user_id))
+        enhanced_extractor = EnhancedTagExtractor(str(phone_number))
         
         # 分析文本影响
         impact_analysis = enhanced_extractor.analyze_text_impact(text)

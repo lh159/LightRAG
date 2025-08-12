@@ -824,20 +824,33 @@ async function loadAnalyticsData() {
             return;
         }
         
-        // 获取用户统计数据
-        const statsResponse = await fetch('/api/user/admin/statistics', {
+        // 获取详细分析数据
+        const analyticsResponse = await fetch('/api/user/admin/analytics/detailed', {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             }
         });
         
-        if (statsResponse.ok) {
-            const statsData = await statsResponse.json();
-            console.log('Analytics data received:', statsData);
-            renderAnalyticsCharts(statsData);
+        if (analyticsResponse.ok) {
+            const analyticsData = await analyticsResponse.json();
+            console.log('Detailed analytics data received:', analyticsData);
+            renderDetailedAnalytics(analyticsData.data);
         } else {
-            console.error('Failed to load analytics data:', statsResponse.status);
+            console.error('Failed to load detailed analytics data:', analyticsResponse.status);
+            // 回退到基础统计数据
+            const statsResponse = await fetch('/api/user/admin/statistics', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (statsResponse.ok) {
+                const statsData = await statsResponse.json();
+                console.log('Basic analytics data received:', statsData);
+                renderAnalyticsCharts(statsData);
+            }
         }
         
     } catch (error) {
@@ -1365,4 +1378,421 @@ window.onclick = function(event) {
     if (event.target === modal) {
         closeModal();
     }
+}
+
+// 详细数据分析功能
+let currentAnalyticsPage = 1;
+let currentAnalyticsFilters = {
+    dimension_filter: '',
+    tag_filter: '',
+    date_from: '',
+    date_to: '',
+    limit: 20
+};
+
+// 渲染详细分析数据
+function renderDetailedAnalytics(data) {
+    console.log('Rendering detailed analytics:', data);
+    
+    // 更新概览卡片
+    updateAnalyticsOverview(data);
+    
+    // 渲染图表
+    renderAnalyticsCharts(data);
+    
+    // 渲染用户列表
+    renderUserList(data.users, data.pagination);
+}
+
+// 更新分析概览
+function updateAnalyticsOverview(data) {
+    document.getElementById('analyticsUserCount').textContent = data.pagination?.total || 0;
+    
+    // 计算总标签数
+    const totalTags = data.users?.reduce((sum, user) => sum + user.tag_count, 0) || 0;
+    document.getElementById('analyticsTagCount').textContent = totalTags;
+    
+    // 计算平均标签数
+    const avgTags = data.users?.length > 0 ? (totalTags / data.users.length).toFixed(1) : 0;
+    document.getElementById('analyticsAvgTags').textContent = avgTags;
+    
+    // 计算平均置信度
+    const avgConfidence = data.users?.length > 0 ? 
+        (data.users.reduce((sum, user) => sum + user.avg_confidence, 0) / data.users.length).toFixed(2) : 0;
+    document.getElementById('analyticsAvgConfidence').textContent = avgConfidence;
+}
+
+// 渲染分析图表
+function renderAnalyticsCharts(data) {
+    // 维度分布图表
+    renderDimensionDistributionChart(data.dimension_stats);
+    
+    // 热门标签图表
+    renderPopularTagsChart(data.popular_tags);
+    
+    // 用户分群图表
+    renderUserSegmentChart(data.user_segments);
+    
+    // 活跃度趋势图表
+    renderActivityTrendChart(data.activity_trend);
+}
+
+// 渲染维度分布图表
+function renderDimensionDistributionChart(dimensionStats) {
+    const ctx = document.getElementById('dimensionDistributionChart');
+    if (!ctx || !dimensionStats) return;
+    
+    // 销毁现有图表
+    if (window.dimensionChart) {
+        window.dimensionChart.destroy();
+    }
+    
+    const labels = dimensionStats.map(stat => stat.dimension);
+    const data = dimensionStats.map(stat => stat.count);
+    const colors = ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#ffeaa7', '#fd79a8'];
+    
+    window.dimensionChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// 渲染热门标签图表
+function renderPopularTagsChart(popularTags) {
+    const ctx = document.getElementById('popularTagsChart');
+    if (!ctx || !popularTags) return;
+    
+    // 销毁现有图表
+    if (window.popularChart) {
+        window.popularChart.destroy();
+    }
+    
+    const labels = popularTags.slice(0, 10).map(tag => tag.name);
+    const data = popularTags.slice(0, 10).map(tag => tag.frequency);
+    
+    window.popularChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '使用频次',
+                data: data,
+                backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                borderColor: '#667eea',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+}
+
+// 渲染用户分群图表
+function renderUserSegmentChart(userSegments) {
+    const ctx = document.getElementById('userSegmentChart');
+    if (!ctx || !userSegments) return;
+    
+    // 销毁现有图表
+    if (window.segmentChart) {
+        window.segmentChart.destroy();
+    }
+    
+    const labels = userSegments.map(segment => segment.segment);
+    const data = userSegments.map(segment => segment.count);
+    const colors = ['#e74c3c', '#f39c12', '#27ae60', '#3498db'];
+    
+    window.segmentChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors.slice(0, labels.length),
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+// 渲染活跃度趋势图表
+function renderActivityTrendChart(activityTrend) {
+    const ctx = document.getElementById('activityTrendChart');
+    if (!ctx || !activityTrend) return;
+    
+    // 销毁现有图表
+    if (window.activityTrendChart) {
+        window.activityTrendChart.destroy();
+    }
+    
+    const labels = activityTrend.map(item => item.date);
+    const userData = activityTrend.map(item => item.new_users);
+    const tagData = activityTrend.map(item => item.new_tags);
+    
+    window.activityTrendChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '新增用户',
+                data: userData,
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }, {
+                label: '新增标签',
+                data: tagData,
+                borderColor: '#e74c3c',
+                backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            }
+        }
+    });
+}
+
+// 渲染用户列表
+function renderUserList(users, pagination) {
+    const container = document.getElementById('userListBody');
+    if (!container || !users) return;
+    
+    container.innerHTML = users.map(user => `
+        <div class="user-row">
+            <div class="user-id">${user.user_id}</div>
+            <div class="user-info">
+                <div class="user-name">${user.username}</div>
+                <div class="user-dates">
+                    注册: ${formatDateShort(user.created_at)}<br>
+                    ${user.last_login ? `登录: ${formatDateShort(user.last_login)}` : '未登录'}
+                </div>
+            </div>
+            <div class="user-stats">
+                <div class="stat-item">
+                    <span class="stat-label">标签数</span>
+                    <span class="stat-value">${user.tag_count}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">置信度</span>
+                    <span class="stat-value">${user.avg_confidence}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">维度</span>
+                    <span class="stat-value">${user.dimensions.length}</span>
+                </div>
+            </div>
+            <div class="user-tags">
+                ${user.tags.slice(0, 5).map(tag => {
+                    const confidenceClass = tag.confidence >= 0.7 ? 'high-confidence' : 
+                                          tag.confidence >= 0.4 ? 'medium-confidence' : 'low-confidence';
+                    return `<span class="tag-chip ${confidenceClass}" title="${tag.evidence}">${tag.name} (${(tag.confidence * 100).toFixed(0)}%)</span>`;
+                }).join('')}
+                ${user.tags.length > 5 ? `<span class="tag-chip">+${user.tags.length - 5}个</span>` : ''}
+            </div>
+            <div class="user-actions">
+                <button class="action-btn view-btn" onclick="viewUserDetail('${user.user_id}')">查看</button>
+                <button class="action-btn export-btn" onclick="exportUserData('${user.user_id}')">导出</button>
+            </div>
+        </div>
+    `).join('');
+    
+    // 更新分页信息
+    updatePaginationInfo(pagination);
+    renderPaginationControls(pagination);
+}
+
+// 更新分页信息
+function updatePaginationInfo(pagination) {
+    const infoElement = document.getElementById('paginationInfo');
+    if (!infoElement || !pagination) return;
+    
+    const start = (pagination.page - 1) * pagination.limit + 1;
+    const end = Math.min(pagination.page * pagination.limit, pagination.total);
+    
+    infoElement.textContent = `显示 ${start}-${end} 条，共 ${pagination.total} 条记录`;
+}
+
+// 渲染分页控件
+function renderPaginationControls(pagination) {
+    const controlsElement = document.getElementById('paginationControls');
+    if (!controlsElement || !pagination) return;
+    
+    const { page, total_pages } = pagination;
+    let html = '';
+    
+    // 上一页
+    html += `<button class="page-btn" ${page <= 1 ? 'disabled' : ''} onclick="changeAnalyticsPage(${page - 1})">上一页</button>`;
+    
+    // 页码
+    const startPage = Math.max(1, page - 2);
+    const endPage = Math.min(total_pages, page + 2);
+    
+    for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === page ? 'active' : ''}" onclick="changeAnalyticsPage(${i})">${i}</button>`;
+    }
+    
+    // 下一页
+    html += `<button class="page-btn" ${page >= total_pages ? 'disabled' : ''} onclick="changeAnalyticsPage(${page + 1})">下一页</button>`;
+    
+    controlsElement.innerHTML = html;
+}
+
+// 切换分析页面
+function changeAnalyticsPage(page) {
+    currentAnalyticsPage = page;
+    loadAnalyticsDataWithFilters();
+}
+
+// 应用分析筛选
+function applyAnalyticsFilters() {
+    currentAnalyticsFilters.dimension_filter = document.getElementById('dimensionFilter').value;
+    currentAnalyticsFilters.tag_filter = document.getElementById('tagNameFilter').value;
+    currentAnalyticsFilters.date_from = document.getElementById('dateFromFilter').value;
+    currentAnalyticsFilters.date_to = document.getElementById('dateToFilter').value;
+    currentAnalyticsPage = 1;
+    
+    loadAnalyticsDataWithFilters();
+}
+
+// 重置分析筛选
+function resetAnalyticsFilters() {
+    document.getElementById('dimensionFilter').value = '';
+    document.getElementById('tagNameFilter').value = '';
+    document.getElementById('dateFromFilter').value = '';
+    document.getElementById('dateToFilter').value = '';
+    
+    currentAnalyticsFilters = {
+        dimension_filter: '',
+        tag_filter: '',
+        date_from: '',
+        date_to: '',
+        limit: 20
+    };
+    currentAnalyticsPage = 1;
+    
+    loadAnalyticsDataWithFilters();
+}
+
+// 带筛选条件加载分析数据
+async function loadAnalyticsDataWithFilters() {
+    try {
+        const token = localStorage.getItem('auth_token');
+        if (!token) return;
+        
+        const params = new URLSearchParams({
+            page: currentAnalyticsPage,
+            limit: currentAnalyticsFilters.limit,
+            ...currentAnalyticsFilters
+        });
+        
+        const response = await fetch(`/api/user/admin/analytics/detailed?${params}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            renderDetailedAnalytics(data.data);
+        } else {
+            console.error('Failed to load filtered analytics data:', response.status);
+        }
+    } catch (error) {
+        console.error('Error loading filtered analytics data:', error);
+    }
+}
+
+// 导出用户数据
+async function exportUserData(userId) {
+    try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`/api/user/admin/users/${userId}/profile`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const blob = new Blob([JSON.stringify(data.user, null, 2)], {
+                type: 'application/json'
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `user_${userId}_profile.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        } else {
+            alert('导出失败');
+        }
+    } catch (error) {
+        console.error('Error exporting user data:', error);
+        alert('导出失败');
+    }
+}
+
+// 格式化短日期
+function formatDateShort(dateString) {
+    if (!dateString) return '未知';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN', {
+        month: '2-digit',
+        day: '2-digit'
+    });
 }

@@ -177,14 +177,133 @@
 
             <!-- 数据分析页面 -->
             <section id="analytics-section" class="content-section">
-                <div class="analytics-grid">
-                    <div class="analytics-card">
-                        <h3>用户增长趋势</h3>
-                        <div id="userGrowthChart"></div>
+                <!-- 筛选控制栏 -->
+                <div class="analytics-controls">
+                    <div class="filter-group">
+                        <label>标签维度:</label>
+                        <select id="dimensionFilter">
+                            <option value="">全部维度</option>
+                            <option value="兴趣爱好标签">兴趣爱好标签</option>
+                            <option value="基本人口统计学标签">基本人口统计学标签</option>
+                            <option value="情绪与情感状态标签">情绪与情感状态标签</option>
+                        </select>
                     </div>
-                    <div class="analytics-card">
-                        <h3>标签使用热度</h3>
-                        <div id="tagHeatMap"></div>
+                    <div class="filter-group">
+                        <label>标签名称:</label>
+                        <input type="text" id="tagNameFilter" placeholder="搜索标签名称">
+                    </div>
+                    <div class="filter-group">
+                        <label>日期范围:</label>
+                        <input type="date" id="dateFromFilter">
+                        <span>至</span>
+                        <input type="date" id="dateToFilter">
+                    </div>
+                    <button class="apply-filter-btn" onclick="applyAnalyticsFilters()">
+                        <i class="fas fa-search"></i> 应用筛选
+                    </button>
+                    <button class="reset-filter-btn" onclick="resetAnalyticsFilters()">
+                        <i class="fas fa-undo"></i> 重置
+                    </button>
+                </div>
+
+                <!-- 数据概览卡片 -->
+                <div class="analytics-overview">
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="overview-info">
+                            <h3 id="analyticsUserCount">-</h3>
+                            <p>用户总数</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-tags"></i>
+                        </div>
+                        <div class="overview-info">
+                            <h3 id="analyticsTagCount">-</h3>
+                            <p>标签总数</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="overview-info">
+                            <h3 id="analyticsAvgTags">-</h3>
+                            <p>人均标签数</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="overview-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="overview-info">
+                            <h3 id="analyticsAvgConfidence">-</h3>
+                            <p>平均置信度</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="analytics-charts">
+                    <div class="chart-row">
+                        <div class="chart-card large">
+                            <h3><i class="fas fa-chart-pie"></i> 标签维度分布</h3>
+                            <canvas id="dimensionDistributionChart"></canvas>
+                        </div>
+                        <div class="chart-card large">
+                            <h3><i class="fas fa-chart-bar"></i> 热门标签TOP20</h3>
+                            <canvas id="popularTagsChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-row">
+                        <div class="chart-card large">
+                            <h3><i class="fas fa-users"></i> 用户分群分析</h3>
+                            <canvas id="userSegmentChart"></canvas>
+                        </div>
+                        <div class="chart-card large">
+                            <h3><i class="fas fa-chart-line"></i> 活跃度趋势</h3>
+                            <canvas id="activityTrendChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用户详细列表 -->
+                <div class="user-details-section">
+                    <div class="section-header">
+                        <h3><i class="fas fa-list"></i> 用户标签详情</h3>
+                        <div class="section-controls">
+                            <select id="userListPageSize">
+                                <option value="10">每页10条</option>
+                                <option value="20" selected>每页20条</option>
+                                <option value="50">每页50条</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="user-list-container">
+                        <div class="user-list-header">
+                            <div class="user-col-id">用户ID</div>
+                            <div class="user-col-info">用户信息</div>
+                            <div class="user-col-stats">标签统计</div>
+                            <div class="user-col-tags">主要标签</div>
+                            <div class="user-col-actions">操作</div>
+                        </div>
+                        <div class="user-list-body" id="userListBody">
+                            <!-- 用户列表将通过JavaScript填充 -->
+                        </div>
+                    </div>
+
+                    <!-- 分页控件 -->
+                    <div class="pagination-container">
+                        <div class="pagination-info" id="paginationInfo">
+                            <!-- 分页信息 -->
+                        </div>
+                        <div class="pagination-controls" id="paginationControls">
+                            <!-- 分页按钮 -->
+                        </div>
                     </div>
                 </div>
             </section>

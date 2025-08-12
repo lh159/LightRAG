@@ -475,6 +475,30 @@ class TagManager:
                             "dimension_weight": 0.0,
                             "stability_score": 0.0,
                             "conflict_history": []
+                        },
+                        "cooking": {
+                            "subcategory_name": "烹饪美食类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "social_gathering": {
+                            "subcategory_name": "社交聚会类",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
+                        },
+                        "other": {
+                            "subcategory_name": "其他兴趣爱好",
+                            "active_tags": [],
+                            "dominant_tag": None,
+                            "dimension_weight": 0.0,
+                            "stability_score": 0.0,
+                            "conflict_history": []
                         }
                     },
                     "overall_weight": 0.0,

@@ -103,6 +103,11 @@ class SemanticTagExtractor(TagExtractor):
         "美食": [...],
         "学习": [...],
         "社交": [...],
+        "宠物": [...],
+        "文艺创作": [...],
+        "手工DIY": [...],
+        "收藏": [...],
+        "生活体验": [...],
         "其他": [...]
     }},
     "情绪与情感状态标签": {{
@@ -302,16 +307,72 @@ class SemanticTagExtractor(TagExtractor):
     def _map_interests_subcategory(self, category_cn: str) -> str:
         """映射兴趣爱好标签的中文分类到英文key"""
         mapping = {
-            "影视欣赏": "film_tv_appreciation",
+            # 文艺创作类
+            "文艺创作": "art_creation",
+            "手工DIY": "handcraft_diy",
+            
+            # 音乐相关
             "音乐": "music_appreciation",
+            "音乐欣赏": "music_appreciation",
+            "音乐演奏": "music_performance",
+            
+            # 影视娱乐
+            "影视欣赏": "film_tv_appreciation",
+            "影视": "film_tv_appreciation",
+            
+            # 运动健身
             "运动": "ball_sports",
+            "球类运动": "ball_sports",
+            "运动比赛欣赏": "sports_watching",
+            "极限运动": "extreme_sports",
+            "养生锻炼": "health_fitness",
+            "健身": "health_fitness",
+            
+            # 宠物相关
+            "宠物": "pet_keeping",
+            "饲养宠物": "pet_keeping",
+            "养宠物": "pet_keeping",
+            "动物": "pet_keeping",
+            
+            # 美食烹饪
             "美食": "cooking",
-            "学习": "knowledge_learning",
+            "烹饪": "cooking",
+            "家常菜": "home_cooking",
+            "烘焙": "baking",
+            "美食探店": "food_exploration",
+            "烹饪/美食制作": "cooking",
+            "烹饪美食制作": "cooking",
+            
+            # 社交互动
             "社交": "social_gathering",
-            "烹饪/美食制作": "cooking",  # 修复：统一映射到cooking
-            "烹饪美食制作": "cooking",    # 添加：无斜杠版本
+            "线下聚会": "offline_socializing",
+            "社交聚会": "social_gathering",
+            
+            # 家居生活
+            "家装设计": "home_design",
+            "家居": "home_design",
+            
+            # 学习成长
+            "学习": "knowledge_learning",
+            "知识学习": "knowledge_learning",
+            
+            # 收藏鉴赏
+            "收藏": "collecting_appreciation",
+            "收藏鉴赏": "collecting_appreciation",
+            
+            # 生活体验
+            "生活体验": "life_experience",
+            "体验生活": "life_experience",
+            
+            # 网络文化
             "网络流行文化": "online_culture",
+            "网络文化": "online_culture",
+            
+            # 人际关系
             "关注人际关系": "social_interests",
+            "人际关系": "social_interests",
+            
+            # 其他
             "其他": "other"
         }
         return mapping.get(category_cn, "other")

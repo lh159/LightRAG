@@ -54,7 +54,10 @@ class TagExtractor:
                     "home_design": "家装设计类",
                     "knowledge_learning": "知识学习类",
                     "collecting_appreciation": "收藏鉴赏类",
-                    "life_experience": "体验生活类"
+                    "life_experience": "体验生活类",
+                    "cooking": "烹饪美食类",
+                    "social_gathering": "社交聚会类",
+                    "other": "其他兴趣爱好"
                 }
             },
             "emotional_state": {

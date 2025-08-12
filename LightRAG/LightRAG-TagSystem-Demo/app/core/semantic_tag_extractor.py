@@ -56,9 +56,9 @@ class SemanticTagExtractor(TagExtractor):
 - ⚠️ 注意：询问不等于喜好，需要结合语气和频率判断
 
 🔍 **情感状态分析**：
-- 重点分析：用户的情绪表达、语气特征、情感需求
-- 关注：语气词、标点符号、情感色彩词汇的使用
-- 结合：对话的整体氛围和用户的表达意图
+- 重点分析：用户的主要情绪倾向（积极/消极/中性）
+- 关注：明显的情感表达，避免过度解读
+- 标准：只提取明确、重要的情感状态，不要过度细分
 
 【语义理解示例】
 
@@ -106,10 +106,15 @@ class SemanticTagExtractor(TagExtractor):
         "其他": [...]
     }},
     "情绪与情感状态标签": {{
-        "当前情绪": [...],
-        "情感需求": [...]
+        "当前情绪": [...]
     }}
 }}
+
+【情感状态分析标准】
+- 只提取明显、重要的情感状态
+- 优先级：高兴、生气、难过、焦虑、兴奋等基础情绪
+- 避免：过度细分如"轻微不满"、"中性情绪"等
+- 置信度要求：至少0.6以上才提取情感标签
 
 【置信度标准】
 - 0.8-1.0：用户明确自述（"我是..."、"我喜欢..."）
@@ -172,8 +177,10 @@ class SemanticTagExtractor(TagExtractor):
                             if self._validate_semantic_tag(tag_info):
                                 # 映射到正确的子分类key
                                 subcategory_key = self._map_interests_subcategory(category)
+                                # 清理标签名称，避免文件路径问题
+                                clean_tag_name = self._clean_tag_name(tag_info["tag"])
                                 tag = TagInfo(
-                                    name=tag_info["tag"],
+                                    name=clean_tag_name,
                                     confidence=tag_info["confidence"],
                                     evidence=tag_info["evidence"],
                                     category="interests_hobbies",
@@ -191,10 +198,17 @@ class SemanticTagExtractor(TagExtractor):
                     if isinstance(tags, list):
                         for tag_info in tags:
                             if self._validate_semantic_tag(tag_info):
+                                # 情感标签置信度过滤：至少0.7以上
+                                if tag_info["confidence"] < 0.7:
+                                    print(f"⚠️ 情感标签置信度过低，过滤: {tag_info['tag']} ({tag_info['confidence']})")
+                                    continue
+                                    
                                 # 映射到正确的子分类key
                                 subcategory_key = self._map_emotions_subcategory(category)
+                                # 清理标签名称
+                                clean_tag_name = self._clean_tag_name(tag_info["tag"])
                                 tag = TagInfo(
-                                    name=tag_info["tag"],
+                                    name=clean_tag_name,
                                     confidence=tag_info["confidence"],
                                     evidence=tag_info["evidence"],
                                     category="emotional_state",
@@ -294,7 +308,8 @@ class SemanticTagExtractor(TagExtractor):
             "美食": "cooking",
             "学习": "knowledge_learning",
             "社交": "social_gathering",
-            "烹饪/美食制作": "cooking",
+            "烹饪/美食制作": "cooking",  # 修复：统一映射到cooking
+            "烹饪美食制作": "cooking",    # 添加：无斜杠版本
             "网络流行文化": "online_culture",
             "关注人际关系": "social_interests",
             "其他": "other"
@@ -308,3 +323,9 @@ class SemanticTagExtractor(TagExtractor):
             "情感需求": "emotional_needs"
         }
         return mapping.get(category_cn, "current_mood")
+    
+    def _clean_tag_name(self, tag_name: str) -> str:
+        """清理标签名称，避免文件路径问题"""
+        # 替换可能导致文件路径问题的字符
+        cleaned = tag_name.replace("/", "或").replace("\\", "").replace(":", "").replace("*", "").replace("?", "").replace('"', "").replace("<", "").replace(">", "").replace("|", "")
+        return cleaned.strip()

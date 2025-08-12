@@ -80,6 +80,11 @@ class EnhancedTagExtractor:
                 message_id=message_id
             )
         
+        # 🔧 修复：更新标签到文件和数据库
+        if new_tags:
+            updated_tags = self.tag_manager.update_tags(new_tags)
+            print(f"✅ 标签已更新到文件和数据库")
+        
         return new_tags, triggers
     
     def _convert_tags_format(self, tags_data) -> Dict[str, List]:

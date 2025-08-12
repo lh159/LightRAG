@@ -18,6 +18,7 @@ class TagInfo:
     evidence: str
     category: str  # 一级标签类别
     subcategory: str  # 二级标签类别
+    reasoning: str = ""  # 推理过程（可选）
 
 class TagExtractor:
     def __init__(self, user_id: str):

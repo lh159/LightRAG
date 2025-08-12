@@ -8,6 +8,7 @@ from datetime import datetime
 import uuid
 
 from .tag_extractor import TagExtractor, TagInfo
+from .semantic_tag_extractor import SemanticTagExtractor
 from .tag_tracer import TagTracer
 from .tag_trigger_detector import TagTriggerDetector
 from .tag_manager import TagManager
@@ -16,9 +17,16 @@ from .tag_manager import TagManager
 class EnhancedTagExtractor:
     """增强版标签提取器，支持溯源功能"""
     
-    def __init__(self, user_id: str):
+    def __init__(self, user_id: str, use_semantic_extractor: bool = True):
         self.user_id = user_id
-        self.base_extractor = TagExtractor(user_id)
+        # 选择使用语义增强版或原版提取器
+        if use_semantic_extractor:
+            self.base_extractor = SemanticTagExtractor(user_id)
+            print(f"🧠 使用语义增强版标签提取器 for user {user_id}")
+        else:
+            self.base_extractor = TagExtractor(user_id)
+            print(f"🔤 使用原版标签提取器 for user {user_id}")
+        
         self.tag_tracer = TagTracer(user_id)
         self.trigger_detector = TagTriggerDetector(user_id)
         self.tag_manager = TagManager(user_id)

@@ -211,11 +211,23 @@ def get_detailed_tag_analysis():
     """获取详细的标签分析（管理员功能）"""
     try:
         user_manager = UserManager(current_app.config['DB_MANAGER'])
-        analysis = user_manager.get_detailed_tag_analysis()
+        
+        # 获取分析类型参数
+        analysis_type = request.args.get('type', 'comprehensive')
+        
+        if analysis_type == 'macro':
+            # 使用新的宏观分析引擎
+            from app.models.macro_analysis import MacroAnalysisEngine
+            macro_engine = MacroAnalysisEngine(current_app.config['DB_MANAGER'])
+            analysis = macro_engine.get_comprehensive_analysis()
+        else:
+            # 使用原有的详细分析
+            analysis = user_manager.get_detailed_tag_analysis()
         
         return jsonify({
             "success": True,
-            "analysis": analysis
+            "analysis": analysis,
+            "analysis_type": analysis_type
         })
         
     except Exception as e:

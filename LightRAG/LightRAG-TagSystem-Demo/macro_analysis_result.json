@@ -1,0 +1,352 @@
+{
+  "analysis_timestamp": "2025-08-12T11:47:16.221274",
+  "total_users": 13,
+  "total_tags": 157,
+  "analysis_period": "最近30天 (2025-07-13 至 2025-08-12)",
+  "interest_analysis": {
+    "summary": {
+      "total_interest_tags": 44,
+      "unique_interests": 40,
+      "avg_interests_per_user": 3.6666666666666665,
+      "dominant_interest_category": "社交互动"
+    },
+    "clusters": [
+      {
+        "name": "社交互动",
+        "user_count": 3,
+        "avg_confidence": 0.6666666666666666,
+        "total_mentions": 3,
+        "evidence_keywords": [
+          "\"'嘴甜'暗示对社交中语言表达的敏感度;",
+          "用户说'我们再聊聊'...\"",
+          "\"用户说'我们再聊聊';",
+          "撒娇的用语表明用户喜欢轻松愉快的社交互动...\"",
+          "\"'原谅你'暗示可能存在社交互动场景\""
+        ],
+        "user_diversity": 1.0
+      },
+      {
+        "name": "社交活动",
+        "user_count": 3,
+        "avg_confidence": 0.6333333333333333,
+        "total_mentions": 3,
+        "evidence_keywords": [
+          "|",
+          "\"标准化自:",
+          "\"一起去吃美味蟹黄包\"",
+          "\"提及'老牛吃嫩草'可能涉及社交话题;",
+          "标准化自:"
+        ],
+        "user_diversity": 1.0
+      }
+    ],
+    "diversity_metrics": {
+      "shannon_diversity": 5.243,
+      "avg_interests_per_user": 3.67,
+      "max_interests_per_user": 16,
+      "users_with_single_interest": 2
+    },
+    "intensity_analysis": {
+      "intensity_distribution": {
+        "high_intensity": 1,
+        "medium_intensity": 39,
+        "low_intensity": 4
+      },
+      "avg_confidence": 0.667,
+      "confidence_std": 0.139,
+      "high_confidence_interests": [
+        "美食爱好者"
+      ]
+    },
+    "evolution_trends": {
+      "trend": "stable",
+      "emerging_interests": [],
+      "declining_interests": []
+    },
+    "correlation_matrix": {
+      "correlations": []
+    },
+    "potential_interests": [],
+    "interest_personas": [],
+    "insights": [
+      "🎯 用户兴趣多样化程度较高，适合推荐多元化内容",
+      "🔥 最受欢迎的兴趣是'社交互动'，有3个用户",
+      "⚠️ 部分兴趣标签置信度较低，可能需要更多互动确认"
+    ],
+    "recommendations": [
+      "📈 重点关注热门兴趣：社交互动, 社交活动，可以针对性地提供相关内容",
+      "🎯 建议通过更深入的对话来提升用户兴趣标签的置信度"
+    ]
+  },
+  "demographic_analysis": {
+    "summary": {
+      "total_users_with_demographics": 12,
+      "demographic_completeness": 1.0,
+      "diversity_index": 4.446
+    },
+    "age_analysis": {
+      "distribution": {
+        "年轻人": 4,
+        "青年": 1,
+        "成年人": 5,
+        "年轻": 1,
+        "24岁": 2,
+        "相对年轻": 1,
+        "青少年": 5,
+        "年轻成人": 4,
+        "中年人": 1,
+        "年轻群体": 2,
+        "年轻群体（18-25岁）": 1,
+        "中老年": 1
+      },
+      "total_with_age": 28,
+      "most_common_age_group": "成年人"
+    },
+    "gender_analysis": {
+      "distribution": {
+        "男性": 1,
+        "女性": 2,
+        "女": 6,
+        "男": 2
+      },
+      "total_with_gender": 11,
+      "gender_ratio": "男性27.3%，女性72.7%"
+    },
+    "location_analysis": {
+      "distribution": {
+        "城市地区": 1,
+        "网络文化活跃地区": 1,
+        "北方地区": 1,
+        "南方地区": 1
+      },
+      "total_with_location": 4,
+      "geographic_diversity": 4
+    },
+    "demo_interest_correlation": {
+      "correlations": {}
+    },
+    "insights": [
+      "👥 用户群体以成年人为主",
+      "👫 用户性别分布：男性27.3%，女性72.7%"
+    ],
+    "recommendations": []
+  },
+  "emotional_analysis": {
+    "summary": {
+      "total_emotion_records": 57,
+      "users_with_emotions": 13,
+      "emotional_health_score": 0.482,
+      "most_common_emotion": "偏好简短交流"
+    },
+    "distribution": {
+      "distribution": {
+        "偏好简短交流": 8,
+        "平静": 4,
+        "高兴": 3,
+        "困惑": 3,
+        "消极情绪": 3,
+        "生气": 3,
+        "不满": 2,
+        "不耐烦": 2,
+        "焦虑": 2,
+        "理解": 2
+      },
+      "total_emotion_records": 57,
+      "unique_emotions": 35
+    },
+    "patterns": [
+      {
+        "user": "19802020010",
+        "sequence": [
+          "不耐烦",
+          "分心",
+          "积极",
+          "需要开导",
+          "不满"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      },
+      {
+        "user": "19802020008",
+        "sequence": [
+          "抗拒",
+          "生气",
+          "困惑",
+          "困惑或犹豫",
+          "消极情绪"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      },
+      {
+        "user": "19802020006",
+        "sequence": [
+          "困惑或好奇",
+          "寻求理解或关注",
+          "不满或轻蔑",
+          "愉悦",
+          "明确需求"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      },
+      {
+        "user": "19802020005",
+        "sequence": [
+          "平静",
+          "陪伴",
+          "高兴",
+          "不满",
+          "理解"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      },
+      {
+        "user": "19802020004",
+        "sequence": [
+          "沮丧",
+          "理解",
+          "偏好简短交流",
+          "平静"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      },
+      {
+        "user": "19802020001",
+        "sequence": [
+          "偏好简短交流",
+          "困惑",
+          "帮助",
+          "平静"
+        ],
+        "pattern_type": "波动型",
+        "stability_score": 0.0
+      }
+    ],
+    "stability_analysis": {
+      "average_stability": 0.0,
+      "stable_users": 0,
+      "unstable_users": 9
+    },
+    "trigger_analysis": {
+      "top_triggers": {
+        "文本长度8字符...;": 4,
+        "\"用户文本:": 3,
+        "用户文本:": 3,
+        "欸？当然可以啦！...;": 3,
+        "文本长度5字符...;": 3,
+        "用户提到'想好的结果，好的结果不会发生，想坏的结果坏的结果会发生'...;": 2,
+        "出什么我没听清...;": 2,
+        "用户说'我认为你是黑恶势力'...;": 2,
+        "\"为什么想见我\"": 2,
+        "\"刚打过就不能想你了吗\"": 2
+      },
+      "total_triggers": 99
+    },
+    "insights": [
+      "😊 用户情绪表达丰富，情感体验多样化",
+      "⚠️ 部分用户情绪波动较大，需要关注情感健康"
+    ],
+    "recommendations": []
+  },
+  "cross_dimension_insights": {
+    "total_correlations": 181,
+    "top_correlations": [
+      {
+        "demographic": "女",
+        "interest": "社交活动",
+        "frequency": 3
+      },
+      {
+        "demographic": "成年人",
+        "interest": "社交互动",
+        "frequency": 2
+      },
+      {
+        "demographic": "无明显倾向",
+        "interest": "社交互动",
+        "frequency": 2
+      },
+      {
+        "demographic": "无明显倾向",
+        "interest": "社交活动",
+        "frequency": 2
+      },
+      {
+        "demographic": "无明显倾向",
+        "interest": "烹饪爱好者",
+        "frequency": 2
+      },
+      {
+        "demographic": "无明显倾向",
+        "interest": "社交需求",
+        "frequency": 2
+      },
+      {
+        "demographic": "青少年",
+        "interest": "社交互动",
+        "frequency": 2
+      },
+      {
+        "demographic": "青少年",
+        "interest": "社交活动",
+        "frequency": 2
+      },
+      {
+        "demographic": "女",
+        "interest": "社交互动",
+        "frequency": 2
+      },
+      {
+        "demographic": "年轻成人",
+        "interest": "社交互动",
+        "frequency": 2
+      }
+    ],
+    "users_with_complete_profile": 11
+  },
+  "user_segments": {
+    "segments": [
+      {
+        "name": "high_activity",
+        "count": 8,
+        "percentage": 61.5
+      },
+      {
+        "name": "low_activity",
+        "count": 2,
+        "percentage": 15.4
+      },
+      {
+        "name": "medium_activity",
+        "count": 3,
+        "percentage": 23.1
+      }
+    ],
+    "total_users": 13
+  },
+  "trend_analysis": {
+    "daily_trends": [
+      {
+        "date": "2025-08-11",
+        "count": 11
+      },
+      {
+        "date": "2025-08-12",
+        "count": 146
+      }
+    ],
+    "growth_rate": 1227.27,
+    "peak_day": [
+      "2025-08-12",
+      146
+    ]
+  },
+  "business_recommendations": [
+    "🎯 重点发展社交互动相关功能和内容，这是用户最感兴趣的领域",
+    "💚 建议加强情感关怀功能，提升用户情绪健康水平"
+  ]
+}

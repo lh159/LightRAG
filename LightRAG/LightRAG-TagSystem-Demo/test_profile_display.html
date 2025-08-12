@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试用户画像显示</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .profile-dimension {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .dimension-title {
+            color: #333;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #007bff;
+        }
+        .profile-subcategory {
+            margin: 10px 0;
+        }
+        .subcategory-title {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+        }
+        .profile-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .profile-tag {
+            background: #007bff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .profile-tag:hover {
+            background: #0056b3;
+        }
+        .tag-placeholder {
+            color: #999;
+            font-style: italic;
+            background: #f5f5f5;
+            border: 1px dashed #ccc;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        button {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 测试用户画像显示</h1>
+        
+        <div class="test-section">
+            <h3>测试数据</h3>
+            <button onclick="testActiveDimensions()">测试 active_dimensions 格式</button>
+            <button onclick="testTagDimensions()">测试 tag_dimensions 格式</button>
+            <button onclick="clearDisplay()">清空显示</button>
+        </div>
+        
+        <div id="profileContent">
+            <p style="color: #666; text-align: center;">点击上方按钮测试不同的数据格式</p>
+        </div>
+    </div>
+
+    <script>
+        // 模拟前端的转换逻辑
+        function convertBackendToFrontend(profileData) {
+            if (!profileData.success) {
+                return {
+                    active_dimensions: [],
+                    emotional_health_index: 0.5,
+                    profile_maturity: 0.0
+                };
+            }
+
+            const dimensions = profileData.user_tags.tag_dimensions;
+            const activeDimensions = [];
+            
+            // 处理新的二级标签结构
+            Object.entries(dimensions).forEach(([key, dimension]) => {
+                const tags = [];
+                
+                // 处理新的二级标签结构
+                if (dimension.subcategories) {
+                    // 遍历所有二级分类
+                    Object.entries(dimension.subcategories).forEach(([subKey, subcategoryData]) => {
+                        if (subcategoryData.active_tags && Array.isArray(subcategoryData.active_tags)) {
+                            tags.push(...subcategoryData.active_tags.map(tag => ({
+                                name: tag.tag_name || tag.name,
+                                tag_name: tag.tag_name || tag.name,
+                                confidence: tag.avg_confidence || tag.confidence || 0,
+                                weight: tag.current_weight || tag.weight || 0,
+                                avg_confidence: tag.avg_confidence || 0,
+                                category: tag.category || key,
+                                subcategory: tag.subcategory || subKey,
+                                subcategory_name: subcategoryData.subcategory_name || subKey
+                            })));
+                        }
+                    });
+                }
+                
+                // 总是添加维度，即使没有标签
+                activeDimensions.push({
+                    name: dimension.dimension_name || dimension.name || key,
+                    dimension: key,
+                    tags: tags,
+                    subcategories: dimension.subcategories || null
+                });
+            });
+            
+            return {
+                active_dimensions: activeDimensions,
+                emotional_health_index: profileData.user_tags.emotional_health_index || 
+                                       profileData.user_tags.computed_metrics?.emotional_health_index || 0.5,
+                profile_maturity: profileData.user_tags.profile_maturity || 
+                                 profileData.user_tags.computed_metrics?.overall_profile_maturity || 0.0
+            };
+        }
+
+        // 模拟后端返回的数据结构
+        const mockBackendData = {
+            "user_tags": {
+                "tag_dimensions": {
+                    "interests_hobbies": {
+                        "dimension_name": "兴趣爱好标签",
+                        "subcategories": {
+                            "knowledge_learning": {
+                                "subcategory_name": "知识学习类",
+                                "active_tags": [
+                                    {
+                                        "tag_name": "魔法药水制作",
+                                        "avg_confidence": 0.8,
+                                        "category": "interests_hobbies",
+                                        "subcategory": "knowledge_learning"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "emotional_state": {
+                        "dimension_name": "情绪与情感状态标签",
+                        "subcategories": {
+                            "current_mood": {
+                                "subcategory_name": "当前情绪状态",
+                                "active_tags": [
+                                    {
+                                        "tag_name": "兴奋",
+                                        "avg_confidence": 0.7,
+                                        "category": "emotional_state",
+                                        "subcategory": "current_mood"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        // 定义所有维度的基础框架
+        const allDimensions = [
+            { 
+                key: 'demographic_info', 
+                name: '基本人口统计学标签',
+                subcategories: {
+                    'age': '年龄',
+                    'gender': '性别',
+                    'location': '地域'
+                }
+            },
+            { 
+                key: 'interests_hobbies', 
+                name: '兴趣爱好标签',
+                subcategories: {
+                    'art_creation': '文艺创作类',
+                    'handcraft_diy': '手工DIY类',
+                    'music_appreciation': '音乐欣赏类',
+                    'music_performance': '音乐演奏类',
+                    'film_tv_appreciation': '影视欣赏类',
+                    'ball_sports': '球类运动类',
+                    'sports_watching': '运动比赛欣赏类',
+                    'extreme_sports': '极限运动类',
+                    'health_fitness': '养生锻炼身体类',
+                    'pet_keeping': '饲养宠物类',
+                    'home_cooking': '家常菜烹饪类',
+                    'baking': '烘焙类',
+                    'food_exploration': '美食探店类',
+                    'offline_socializing': '线下聚会社交类',
+                    'home_design': '家装设计类',
+                    'knowledge_learning': '知识学习类',
+                    'collecting_appreciation': '收藏鉴赏类',
+                    'life_experience': '体验生活类'
+                }
+            },
+            { 
+                key: 'emotional_state', 
+                name: '情绪与情感状态标签',
+                subcategories: {
+                    'current_mood': '当前情绪状态',
+                    'emotional_needs': '情感需求'
+                }
+            }
+        ];
+
+        // 更新用户画像显示函数
+        function updateProfile(profile) {
+            const profileContent = document.getElementById('profileContent');
+            
+            if (!profile || Object.keys(profile).length === 0) {
+                profileContent.innerHTML = '<p style="color: #666; text-align: center;">还没有生成用户画像，继续对话来建立你的个性化标签</p>';
+                return;
+            }
+            
+            let html = '';
+            let hasAnyTags = false;
+            
+            // 处理新的二级标签结构或向后兼容
+            if (profile.tag_dimensions) {
+                // 处理新的tag_dimensions结构
+                allDimensions.forEach(dimensionDef => {
+                    const dimensionData = profile.tag_dimensions[dimensionDef.key];
+                    
+                    if (dimensionData && dimensionData.subcategories) {
+                        html += `<div class="profile-dimension">`;
+                        html += `<h3 class="dimension-title">${dimensionData.dimension_name || dimensionDef.name}</h3>`;
+                        
+                        // 遍历所有子分类
+                        Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
+                            const subcategoryData = dimensionData.subcategories[subKey];
+                            
+                            if (subcategoryData && subcategoryData.active_tags && subcategoryData.active_tags.length > 0) {
+                                html += `<div class="profile-subcategory">`;
+                                html += `<h4 class="subcategory-title">${subcategoryData.subcategory_name || subName}</h4>`;
+                                html += `<div class="profile-tags">`;
+                                
+                                hasAnyTags = true;
+                                subcategoryData.active_tags.forEach(tag => {
+                                    const tagName = tag.tag_name || tag.name || '';
+                                    const confidence = tag.avg_confidence || tag.confidence || 0;
+                                    html += `<span class="profile-tag" title="置信度: ${(confidence * 100).toFixed(0)}%">
+                                        ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                    </span>`;
+                                });
+                                
+                                html += `</div></div>`;
+                            }
+                        });
+                        
+                        html += `</div>`;
+                    }
+                });
+            } else if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
+                // 优先处理active_dimensions格式（前端转换后的数据）
+                allDimensions.forEach(dimensionDef => {
+                    let currentDimension = profile.active_dimensions.find(d => 
+                        d.dimension === dimensionDef.key || 
+                        d.name === dimensionDef.name ||
+                        (d.name && d.name.includes(dimensionDef.name.substring(0, 4)))
+                    );
+                    
+                    html += `<div class="profile-dimension">`;
+                    html += `<h3 class="dimension-title">${currentDimension ? (currentDimension.name || dimensionDef.name) : dimensionDef.name}</h3>`;
+                    
+                    if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
+                        // 如果有标签，按二级分类显示
+                        if (currentDimension.subcategories) {
+                            Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
+                                const subcategoryTags = currentDimension.tags.filter(tag => 
+                                    tag.subcategory === subKey
+                                );
+                                
+                                if (subcategoryTags.length > 0) {
+                                    html += `<div class="profile-subcategory">`;
+                                    html += `<h4 class="subcategory-title">${subName}</h4>`;
+                                    html += `<div class="profile-tags">`;
+                                    
+                                    hasAnyTags = true;
+                                    subcategoryTags.forEach(tag => {
+                                        const tagName = tag.name || tag.tag_name || tag;
+                                        const confidence = tag.confidence || tag.avg_confidence || 0;
+                                        html += `<span class="profile-tag" title="置信度: ${(confidence * 100).toFixed(0)}%">
+                                            ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                        </span>`;
+                                    });
+                                    
+                                    html += `</div></div>`;
+                                }
+                            });
+                            
+                            // 如果没有任何二级分类有标签，显示占位符
+                            const hasAnySubcategoryTags = Object.keys(dimensionDef.subcategories).some(subKey =>
+                                currentDimension.tags.some(tag => tag.subcategory === subKey)
+                            );
+                            
+                            if (!hasAnySubcategoryTags) {
+                                html += `<div class="profile-tags">`;
+                                html += `<span class="tag-placeholder">暂无标签</span>`;
+                                html += `</div>`;
+                            }
+                        } else {
+                            // 没有二级分类信息，直接显示所有标签
+                            html += `<div class="profile-tags">`;
+                            hasAnyTags = true;
+                            currentDimension.tags.forEach(tag => {
+                                const tagName = tag.name || tag.tag_name || tag;
+                                const confidence = tag.confidence || tag.avg_confidence || 0;
+                                html += `<span class="profile-tag" title="置信度: ${(confidence * 100).toFixed(0)}%">
+                                    ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                </span>`;
+                            });
+                            html += `</div>`;
+                        }
+                    } else {
+                        // 没有标签，显示占位符
+                        html += `<div class="profile-tags">`;
+                        html += `<span class="tag-placeholder">暂无标签</span>`;
+                        html += `</div>`;
+                    }
+                    
+                    html += `</div>`;
+                });
+            }
+            
+            profileContent.innerHTML = html;
+        }
+
+        // 测试函数
+        function testActiveDimensions() {
+            console.log("🧪 测试 active_dimensions 格式...");
+            const convertedData = convertBackendToFrontend({
+                success: true,
+                user_tags: mockBackendData.user_tags
+            });
+            console.log("转换后的数据:", convertedData);
+            updateProfile(convertedData);
+        }
+
+        function testTagDimensions() {
+            console.log("🧪 测试 tag_dimensions 格式...");
+            updateProfile({
+                tag_dimensions: mockBackendData.user_tags.tag_dimensions
+            });
+        }
+
+        function clearDisplay() {
+            document.getElementById('profileContent').innerHTML = 
+                '<p style="color: #666; text-align: center;">点击上方按钮测试不同的数据格式</p>';
+        }
+    </script>
+</body>
+</html>

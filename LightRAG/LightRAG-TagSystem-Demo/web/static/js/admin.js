@@ -560,8 +560,8 @@ async function loadTagsData() {
             return;
         }
         
-        // 获取详细标签分析数据
-        const response = await fetch('/api/user/admin/tags/analysis', {
+        // 获取宏观分析数据
+        const response = await fetch('/api/user/admin/tags/analysis?type=macro', {
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
@@ -570,20 +570,21 @@ async function loadTagsData() {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('Tags analysis data received:', data);
-            renderDetailedTagsAnalysis(data.analysis);
+            console.log('Macro analysis data received:', data);
+            renderMacroAnalysis(data.analysis);
         } else {
-            console.error('Failed to load tags data:', response.status);
-            // 回退到简单统计
-            const statsResponse = await fetch('/api/user/admin/statistics', {
+            console.error('Failed to load macro analysis:', response.status);
+            // 回退到原有分析
+            const fallbackResponse = await fetch('/api/user/admin/tags/analysis', {
                 headers: {
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
             });
             
-            if (statsResponse.ok) {
-                const statsData = await statsResponse.json();
-                renderTagStats(statsData.statistics.tag_statistics || {});
+            if (fallbackResponse.ok) {
+                const fallbackData = await fallbackResponse.json();
+                renderDetailedTagsAnalysis(fallbackData.analysis);
             }
         }
         
@@ -978,6 +979,384 @@ function formatDate(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+// 渲染宏观分析
+function renderMacroAnalysis(analysis) {
+    if (!analysis) {
+        renderTagsError();
+        return;
+    }
+    
+    console.log('Rendering macro analysis:', analysis);
+    
+    // 清空现有内容
+    const container = document.querySelector('#tags-section .content-area');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 更新标签统计概览
+    renderMacroOverview(analysis);
+    
+    // 渲染三大维度分析
+    renderInterestMacroAnalysis(analysis.interest_analysis);
+    renderDemographicMacroAnalysis(analysis.demographic_analysis);
+    renderEmotionalMacroAnalysis(analysis.emotional_analysis);
+    
+    // 渲染综合洞察
+    renderCrossDimensionInsights(analysis.cross_dimension_insights);
+    renderUserSegments(analysis.user_segments);
+    renderTrendAnalysis(analysis.trend_analysis);
+    renderBusinessRecommendations(analysis.business_recommendations);
+}
+
+// 渲染宏观概览
+function renderMacroOverview(analysis) {
+    const container = document.getElementById('tagStatsList');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="macro-overview">
+            <div class="overview-card">
+                <div class="overview-title">📊 分析概览</div>
+                <div class="overview-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">总用户数</span>
+                        <span class="stat-value">${analysis.total_users}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总标签数</span>
+                        <span class="stat-value">${analysis.total_tags}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">分析周期</span>
+                        <span class="stat-value">${analysis.analysis_period || '全时段'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染兴趣爱好宏观分析（重点）
+function renderInterestMacroAnalysis(interestAnalysis) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !interestAnalysis) return;
+    
+    let interestContainer = document.createElement('div');
+    interestContainer.id = 'interestMacroAnalysis';
+    interestContainer.className = 'macro-analysis-section';
+    container.appendChild(interestContainer);
+    
+    const clusters = interestAnalysis.clusters || [];
+    const insights = interestAnalysis.insights || [];
+    const recommendations = interestAnalysis.recommendations || [];
+    
+    interestContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>🎯 兴趣爱好深度分析</h2>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="summary-label">兴趣聚类</span>
+                    <span class="summary-value">${clusters.length}个</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">平均兴趣数</span>
+                    <span class="summary-value">${interestAnalysis.summary?.avg_interests_per_user || 0}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">主导兴趣</span>
+                    <span class="summary-value">${interestAnalysis.summary?.dominant_interest_category || '暂无'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-content">
+            <div class="analysis-section">
+                <h3>🔥 热门兴趣聚类</h3>
+                <div class="clusters-grid">
+                    ${clusters.slice(0, 6).map(cluster => `
+                        <div class="cluster-card">
+                            <div class="cluster-name">${cluster.name}</div>
+                            <div class="cluster-stats">
+                                <span class="cluster-users">${cluster.user_count} 用户</span>
+                                <span class="cluster-confidence">${(cluster.avg_confidence * 100).toFixed(0)}% 置信度</span>
+                            </div>
+                            <div class="cluster-mentions">${cluster.total_mentions} 次提及</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="analysis-section">
+                <h3>💡 兴趣洞察</h3>
+                <div class="insights-list">
+                    ${insights.map(insight => `
+                        <div class="insight-item">${insight}</div>
+                    `).join('')}
+                </div>
+            </div>
+            
+            <div class="analysis-section">
+                <h3>🎯 建议</h3>
+                <div class="recommendations-list">
+                    ${recommendations.map(rec => `
+                        <div class="recommendation-item">${rec}</div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染人口统计学宏观分析
+function renderDemographicMacroAnalysis(demoAnalysis) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !demoAnalysis) return;
+    
+    let demoContainer = document.createElement('div');
+    demoContainer.id = 'demoMacroAnalysis';
+    demoContainer.className = 'macro-analysis-section';
+    container.appendChild(demoContainer);
+    
+    const insights = demoAnalysis.insights || [];
+    const recommendations = demoAnalysis.recommendations || [];
+    
+    demoContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>👥 人口统计学分析</h2>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="summary-label">用户完整度</span>
+                    <span class="summary-value">${((demoAnalysis.summary?.demographic_completeness || 0) * 100).toFixed(1)}%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">多样性指数</span>
+                    <span class="summary-value">${demoAnalysis.summary?.diversity_index || 0}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-content">
+            <div class="demo-analysis-grid">
+                ${demoAnalysis.age_analysis ? `
+                    <div class="demo-section">
+                        <h3>📊 年龄分布</h3>
+                        <div class="demo-distribution">
+                            ${Object.entries(demoAnalysis.age_analysis.distribution || {}).map(([age, count]) => `
+                                <div class="demo-item">
+                                    <span class="demo-label">${age}</span>
+                                    <span class="demo-count">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+                
+                ${demoAnalysis.gender_analysis ? `
+                    <div class="demo-section">
+                        <h3>⚧ 性别分布</h3>
+                        <div class="demo-distribution">
+                            ${Object.entries(demoAnalysis.gender_analysis.distribution || {}).map(([gender, count]) => `
+                                <div class="demo-item">
+                                    <span class="demo-label">${gender}</span>
+                                    <span class="demo-count">${count}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="analysis-section">
+                <h3>💡 人口统计学洞察</h3>
+                <div class="insights-list">
+                    ${insights.map(insight => `
+                        <div class="insight-item">${insight}</div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染情绪与情感状态宏观分析
+function renderEmotionalMacroAnalysis(emotionAnalysis) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !emotionAnalysis) return;
+    
+    let emotionContainer = document.createElement('div');
+    emotionContainer.id = 'emotionMacroAnalysis';
+    emotionContainer.className = 'macro-analysis-section';
+    container.appendChild(emotionContainer);
+    
+    const insights = emotionAnalysis.insights || [];
+    const recommendations = emotionAnalysis.recommendations || [];
+    
+    emotionContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>💚 情绪与情感状态分析</h2>
+            <div class="analysis-summary">
+                <div class="summary-item">
+                    <span class="summary-label">情绪健康分数</span>
+                    <span class="summary-value">${((emotionAnalysis.summary?.emotional_health_score || 0) * 100).toFixed(0)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">最常见情绪</span>
+                    <span class="summary-value">${emotionAnalysis.summary?.most_common_emotion || '暂无'}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="analysis-content">
+            ${emotionAnalysis.distribution ? `
+                <div class="emotion-section">
+                    <h3>📊 情绪分布</h3>
+                    <div class="emotion-distribution">
+                        ${Object.entries(emotionAnalysis.distribution.distribution || {}).slice(0, 8).map(([emotion, count]) => `
+                            <div class="emotion-item">
+                                <span class="emotion-label">${emotion}</span>
+                                <span class="emotion-count">${count}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div class="analysis-section">
+                <h3>💡 情绪洞察</h3>
+                <div class="insights-list">
+                    ${insights.map(insight => `
+                        <div class="insight-item">${insight}</div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染跨维度洞察
+function renderCrossDimensionInsights(crossInsights) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !crossInsights) return;
+    
+    let crossContainer = document.createElement('div');
+    crossContainer.id = 'crossDimensionInsights';
+    crossContainer.className = 'macro-analysis-section';
+    container.appendChild(crossContainer);
+    
+    crossContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>🔗 跨维度关联分析</h2>
+        </div>
+        
+        <div class="analysis-content">
+            <div class="cross-stats">
+                <div class="cross-stat">
+                    <span class="cross-label">关联数量</span>
+                    <span class="cross-value">${crossInsights.total_correlations || 0}</span>
+                </div>
+                <div class="cross-stat">
+                    <span class="cross-label">完整画像用户</span>
+                    <span class="cross-value">${crossInsights.users_with_complete_profile || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染用户细分
+function renderUserSegments(userSegments) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !userSegments) return;
+    
+    let segmentsContainer = document.createElement('div');
+    segmentsContainer.id = 'userSegments';
+    segmentsContainer.className = 'macro-analysis-section';
+    container.appendChild(segmentsContainer);
+    
+    segmentsContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>👤 用户群体细分</h2>
+        </div>
+        
+        <div class="analysis-content">
+            <div class="segments-overview">
+                <div class="segments-total">总用户: ${userSegments.total_users || 0}</div>
+            </div>
+            
+            ${userSegments.segments && userSegments.segments.length > 0 ? `
+                <div class="segments-grid">
+                    ${userSegments.segments.map(segment => `
+                        <div class="segment-card">
+                            <div class="segment-name">${segment.name}</div>
+                            <div class="segment-count">${segment.count} 用户</div>
+                            <div class="segment-percentage">${segment.percentage}%</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="no-data">暂无用户细分数据</p>'}
+        </div>
+    `;
+}
+
+// 渲染趋势分析
+function renderTrendAnalysis(trendAnalysis) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !trendAnalysis) return;
+    
+    let trendContainer = document.createElement('div');
+    trendContainer.id = 'trendAnalysis';
+    trendContainer.className = 'macro-analysis-section';
+    container.appendChild(trendContainer);
+    
+    trendContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>📈 趋势分析</h2>
+        </div>
+        
+        <div class="analysis-content">
+            <div class="trend-stats">
+                <div class="trend-stat">
+                    <span class="trend-label">增长率</span>
+                    <span class="trend-value ${trendAnalysis.growth_rate >= 0 ? 'positive' : 'negative'}">
+                        ${trendAnalysis.growth_rate >= 0 ? '+' : ''}${trendAnalysis.growth_rate}%
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// 渲染业务建议
+function renderBusinessRecommendations(recommendations) {
+    const container = document.querySelector('#tags-section .content-area');
+    if (!container || !recommendations) return;
+    
+    let recContainer = document.createElement('div');
+    recContainer.id = 'businessRecommendations';
+    recContainer.className = 'macro-analysis-section';
+    container.appendChild(recContainer);
+    
+    recContainer.innerHTML = `
+        <div class="analysis-header">
+            <h2>💼 业务建议</h2>
+        </div>
+        
+        <div class="analysis-content">
+            ${recommendations.length > 0 ? `
+                <div class="business-recommendations">
+                    ${recommendations.map((rec, index) => `
+                        <div class="business-rec-item">
+                            <div class="rec-number">${index + 1}</div>
+                            <div class="rec-content">${rec}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            ` : '<p class="no-data">暂无业务建议</p>'}
+        </div>
+    `;
 }
 
 // 点击模态框外部关闭

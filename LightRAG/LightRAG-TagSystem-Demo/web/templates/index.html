@@ -1539,7 +1539,10 @@
                         'home_design': '家装设计类',
                         'knowledge_learning': '知识学习类',
                         'collecting_appreciation': '收藏鉴赏类',
-                        'life_experience': '体验生活类'
+                        'life_experience': '体验生活类',
+                        'cooking': '烹饪美食类',
+                        'social_gathering': '社交聚会类',
+                        'other': '其他兴趣爱好'
                     }
                 },
                 { 
@@ -2339,7 +2342,10 @@
                         'home_design': '家装设计类',
                         'knowledge_learning': '知识学习类',
                         'collecting_appreciation': '收藏鉴赏类',
-                        'life_experience': '体验生活类'
+                        'life_experience': '体验生活类',
+                        'cooking': '烹饪美食类',
+                        'social_gathering': '社交聚会类',
+                        'other': '其他兴趣爱好'
                     }
                 },
                 { 
@@ -2439,7 +2445,10 @@
                         'home_design': '家装设计类',
                         'knowledge_learning': '知识学习类',
                         'collecting_appreciation': '收藏鉴赏类',
-                        'life_experience': '体验生活类'
+                        'life_experience': '体验生活类',
+                        'cooking': '烹饪美食类',
+                        'social_gathering': '社交聚会类',
+                        'other': '其他兴趣爱好'
                     }
                 },
                 { 
@@ -2494,7 +2503,7 @@
                     }
                 });
             } else if (profile.active_dimensions && Array.isArray(profile.active_dimensions)) {
-                // 向后兼容：处理旧的active_dimensions格式
+                // 🔧 修复：优先处理active_dimensions格式（前端转换后的数据）
                 allDimensions.forEach(dimensionDef => {
                     let currentDimension = profile.active_dimensions.find(d => 
                         d.dimension === dimensionDef.key || 
@@ -2503,65 +2512,67 @@
                     );
                     
                     html += `<div class="profile-dimension">`;
-                    html += `<h3 class="dimension-title">${dimensionDef.name}</h3>`;
+                    html += `<h3 class="dimension-title">${currentDimension ? (currentDimension.name || dimensionDef.name) : dimensionDef.name}</h3>`;
                     
-                    // 如果有二级分类信息，按二级分类显示
-                    if (currentDimension && currentDimension.subcategories) {
-                        Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
-                            const subcategoryTags = currentDimension.tags.filter(tag => 
-                                tag.subcategory === subKey
+                    if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
+                        // 如果有标签，按二级分类显示
+                        if (currentDimension.subcategories) {
+                            Object.entries(dimensionDef.subcategories).forEach(([subKey, subName]) => {
+                                const subcategoryTags = currentDimension.tags.filter(tag => 
+                                    tag.subcategory === subKey
+                                );
+                                
+                                if (subcategoryTags.length > 0) {
+                                    html += `<div class="profile-subcategory">`;
+                                    html += `<h4 class="subcategory-title">${subName}</h4>`;
+                                    html += `<div class="profile-tags">`;
+                                    
+                                    hasAnyTags = true;
+                                    subcategoryTags.forEach(tag => {
+                                        const tagName = tag.name || tag.tag_name || tag;
+                                        const confidence = tag.confidence || tag.avg_confidence || 0;
+                                        const isNew = isNewTag(tagName, dimensionDef.key);
+                                        const newTagClass = isNew ? ' new-tag' : '';
+                                        html += `<span class="profile-tag clickable${newTagClass}" 
+                                                      onclick="showTagTrace('${tagName}')" 
+                                                      title="点击查看标签溯源"
+                                                      data-category="${dimensionDef.key}"
+                                                      data-subcategory="${subKey}">
+                                            ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                        </span>`;
+                                    });
+                                    
+                                    html += `</div></div>`;
+                                }
+                            });
+                            
+                            // 如果没有任何二级分类有标签，显示占位符
+                            const hasAnySubcategoryTags = Object.keys(dimensionDef.subcategories).some(subKey =>
+                                currentDimension.tags.some(tag => tag.subcategory === subKey)
                             );
                             
-                            if (subcategoryTags.length > 0) {
-                                html += `<div class="profile-subcategory">`;
-                                html += `<h4 class="subcategory-title">${subName}</h4>`;
+                            if (!hasAnySubcategoryTags) {
                                 html += `<div class="profile-tags">`;
-                                
-                                hasAnyTags = true;
-                                subcategoryTags.forEach(tag => {
-                                    const tagName = tag.name || tag.tag_name || tag;
-                                    const confidence = tag.confidence || tag.avg_confidence || 0;
-                                    const isNew = isNewTag(tagName, dimensionDef.key);
-                                    const newTagClass = isNew ? ' new-tag' : '';
-                                    html += `<span class="profile-tag clickable${newTagClass}" 
-                                                  onclick="showTagTrace('${tagName}')" 
-                                                  title="点击查看标签溯源"
-                                                  data-category="${dimensionDef.key}"
-                                                  data-subcategory="${subKey}">
-                                        ${tagName} (${(confidence * 100).toFixed(0)}%)
-                                    </span>`;
-                                });
-                                
-                                html += `</div></div>`;
+                                html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                                html += `</div>`;
                             }
-                        });
-                        
-                        // 如果没有任何二级分类有标签，显示占位符
-                        const hasAnySubcategoryTags = Object.keys(dimensionDef.subcategories).some(subKey =>
-                            currentDimension.tags.some(tag => tag.subcategory === subKey)
-                        );
-                        
-                        if (!hasAnySubcategoryTags) {
+                        } else {
+                            // 没有二级分类信息，直接显示所有标签
                             html += `<div class="profile-tags">`;
-                            html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
+                            hasAnyTags = true;
+                            currentDimension.tags.forEach(tag => {
+                                const tagName = tag.name || tag.tag_name || tag;
+                                const confidence = tag.confidence || tag.avg_confidence || 0;
+                                const isNew = isNewTag(tagName, dimensionDef.key);
+                                const newTagClass = isNew ? ' new-tag' : '';
+                                html += `<span class="profile-tag clickable${newTagClass}" onclick="showTagTrace('${tagName}')" title="点击查看标签溯源">
+                                    ${tagName} (${(confidence * 100).toFixed(0)}%)
+                                </span>`;
+                            });
                             html += `</div>`;
                         }
-                    } else if (currentDimension && currentDimension.tags && currentDimension.tags.length > 0) {
-                        // 兼容旧格式：没有二级分类信息
-                        html += `<div class="profile-tags">`;
-                        hasAnyTags = true;
-                        currentDimension.tags.forEach(tag => {
-                            const tagName = tag.name || tag.tag_name || tag;
-                            const confidence = tag.confidence || tag.avg_confidence || 0;
-                            const isNew = isNewTag(tagName, dimensionDef.key);
-                            const newTagClass = isNew ? ' new-tag' : '';
-                            html += `<span class="profile-tag clickable${newTagClass}" onclick="showTagTrace('${tagName}')" title="点击查看标签溯源">
-                                ${tagName} (${(confidence * 100).toFixed(0)}%)
-                            </span>`;
-                        });
-                        html += `</div>`;
                     } else {
-                        // 没有标签的情况
+                        // 没有标签，显示占位符
                         html += `<div class="profile-tags">`;
                         html += `<span class="tag-placeholder" style="color: #999; font-style: italic; background: #f5f5f5; border: 1px dashed #ccc;">暂无标签</span>`;
                         html += `</div>`;
